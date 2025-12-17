@@ -39,5 +39,21 @@ namespace Gauniv.WebServer.Data
         {
         }
         public DbSet<Game> Games { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            
+            // Configure many-to-many relationship between Game and Category
+            modelBuilder.Entity<Game>()
+                .HasMany(g => g.Categories)
+                .WithMany(c => c.Games);
+            
+            // Configure many-to-many relationship between User and Game
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.OwnedGames)
+                .WithMany(g => g.Owners);
+        }
     }
 }

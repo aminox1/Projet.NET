@@ -50,25 +50,103 @@ namespace Gauniv.WebServer.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            using (var scope = serviceProvider.CreateScope()) // this will use `IServiceScopeFactory` internally
+            using (var scope = serviceProvider.CreateScope())
             {
                 applicationDbContext = scope.ServiceProvider.GetService<ApplicationDbContext>();
-                var userSignInManager = scope.ServiceProvider.GetService<UserManager<User>>();
-                var signInManager = scope.ServiceProvider.GetService<SignInManager<User>>();
+                var userManager = scope.ServiceProvider.GetService<UserManager<User>>();
+                var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
 
-                if (applicationDbContext is null)
+                if (applicationDbContext is null || userManager is null || roleManager is null)
                 {
-                    throw new Exception("ApplicationDbContext is null");
+                    throw new Exception("Required services are null");
                 }
 
-                var r = userSignInManager?.CreateAsync(new User()
+                // Create Admin role if it doesn't exist
+                if (!roleManager.RoleExistsAsync("Admin").Result)
                 {
-                    UserName = "test@test.com",
-                    Email = "test@test.com",
-                    EmailConfirmed = true
-                }, "password").Result;
+                    roleManager.CreateAsync(new IdentityRole("Admin")).Wait();
+                }
 
-                // ....
+                // Create test user
+                var testUser = userManager.FindByEmailAsync("test@test.com").Result;
+                if (testUser == null)
+                {
+                    testUser = new User()
+                    {
+                        UserName = "test@test.com",
+                        Email = "test@test.com",
+                        EmailConfirmed = true,
+                        FirstName = "Test",
+                        LastName = "User"
+                    };
+                    userManager.CreateAsync(testUser, "password").Wait();
+                }
+
+                // Create admin user
+                var adminUser = userManager.FindByEmailAsync("admin@gauniv.com").Result;
+                if (adminUser == null)
+                {
+                    adminUser = new User()
+                    {
+                        UserName = "admin@gauniv.com",
+                        Email = "admin@gauniv.com",
+                        EmailConfirmed = true,
+                        FirstName = "Admin",
+                        LastName = "Gauniv"
+                    };
+                    userManager.CreateAsync(adminUser, "admin123").Wait();
+                    userManager.AddToRoleAsync(adminUser, "Admin").Wait();
+                }
+
+                // Create sample categories
+                if (!applicationDbContext.Categories.Any())
+                {
+                    var categories = new List<Category>
+                    {
+                        new Category { Name = "Action", Description = "Fast-paced games with physical challenges" },
+                        new Category { Name = "Adventure", Description = "Story-driven exploration games" },
+                        new Category { Name = "RPG", Description = "Role-playing games" },
+                        new Category { Name = "Strategy", Description = "Games requiring planning and tactics" },
+                        new Category { Name = "Simulation", Description = "Games simulating real-world activities" },
+                        new Category { Name = "Puzzle", Description = "Games based on problem solving" }
+                    };
+                    applicationDbContext.Categories.AddRange(categories);
+                    applicationDbContext.SaveChanges();
+                }
+
+                // Create sample games
+                if (!applicationDbContext.Games.Any())
+                {
+                    var actionCategory = applicationDbContext.Categories.First(c => c.Name == "Action");
+                    var adventureCategory = applicationDbContext.Categories.First(c => c.Name == "Adventure");
+                    var rpgCategory = applicationDbContext.Categories.First(c => c.Name == "RPG");
+
+                    var games = new List<Game>
+                    {
+                        new Game 
+                        { 
+                            Name = "Epic Quest", 
+                            Description = "An epic adventure through mystical lands", 
+                            Price = 29.99m,
+                            Categories = new List<Category> { adventureCategory, rpgCategory }
+                        },
+                        new Game 
+                        { 
+                            Name = "Space Shooter", 
+                            Description = "Fast-paced space combat action", 
+                            Price = 19.99m,
+                            Categories = new List<Category> { actionCategory }
+                        },
+                        new Game 
+                        { 
+                            Name = "Fantasy World", 
+                            Description = "Build your own fantasy kingdom", 
+                            Price = 39.99m,
+                            Categories = new List<Category> { rpgCategory, adventureCategory }
+                        }
+                    };
+                    applicationDbContext.Games.AddRange(games);
+                }
 
                 applicationDbContext.SaveChanges();
 

@@ -1,4 +1,4 @@
-﻿#region Header
+#region Header
 // Cyril Tisserand
 // Projet Gauniv - WebServer
 // Gauniv 2025
@@ -26,41 +26,25 @@
 // 
 // Please respect the team's standards for any future contribution
 #endregion
-using CommunityToolkit.Maui;
-using Gauniv.Client.Services;
-using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Gauniv.Client
+namespace Gauniv.WebServer.Data
 {
-    public static class MauiProgram
+    public class Category
     {
-        public static MauiApp CreateMauiApp()
-        {
-            var builder = MauiApp.CreateBuilder();
-            builder
-                .UseMauiApp<App>().UseMauiCommunityToolkit()
-                .ConfigureFonts(fonts =>
-                {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                });
-
-            // Register services
-            builder.Services.AddSingleton<NetworkService>(NetworkService.Instance);
-            builder.Services.AddSingleton<GameService>();
-            builder.Services.AddSingleton<LocalGameManager>(LocalGameManager.Instance);
-
-#if DEBUG
-    		builder.Logging.AddDebug();
-#endif
-
-            var app = builder.Build();
-
-            Task.Run(() =>
-            {
-                // Vous pouvez initialiser la connection au serveur a partir d'ici
-            });
-            return app;
-        }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
+        public int Id { get; set; }
+        
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; } = string.Empty;
+        
+        [MaxLength(500)]
+        public string? Description { get; set; }
+        
+        // Navigation property
+        public ICollection<Game> Games { get; set; } = new List<Game>();
     }
 }

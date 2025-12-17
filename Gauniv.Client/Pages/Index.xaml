@@ -30,24 +30,118 @@ Please respect the team's standards for any future contribution
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Gauniv.Client.ViewModel"
+             xmlns:models="clr-namespace:Gauniv.Client.Models"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              x:Class="Gauniv.Client.Pages.Index"
-             Title="Index"
-             x:DataType="vm:IndexViewModel"
-             BindingContext="{vm:IndexViewModel}">
-    <!-- 
-            A vous de créer la liste avec le bon binding. Une <ListBox>, une <CollectionView> ou autre fera l'affaire 
-            La propriété ItemsSource doit pointé vers la propiété Books de votre dataContext actuelle 
-            Utilisé ListBox.ItemTemplate pour définir comment sont affiché vos items
-            <ListBox.ItemTemplate>
-        
-            A vous de faire afficher les champs que vous voulez afficher pour savoir quel sont les livre disponible
-            <xxx Text="{Binding MyPropertyOnMyObjectBook}"/>
-            N'oublier pas non plus de rajouter un boutton (ou une autre technique) quelque part pour allez voir les détails de votre livre
-            Les propriété Command et CommandParameter pourrons vous aider ! 
-            Command="{Binding DataContext.ItemSelectedCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}}" 
-            CommandParameter="{Binding .}"
-    -->
-    <Label Text="List des jeux" />
+             Title="All Games"
+             x:DataType="vm:IndexViewModel">
+    
+    <Grid RowDefinitions="Auto,*" Padding="10">
+        <!-- Search Bar -->
+        <SearchBar Grid.Row="0"
+                   Placeholder="Search games..."
+                   Text="{Binding SearchText}"
+                   SearchCommand="{Binding SearchGamesCommand}"
+                   Margin="0,0,0,10"/>
+
+        <!-- Games List -->
+        <RefreshView Grid.Row="1" 
+                     IsRefreshing="{Binding IsLoading}"
+                     Command="{Binding LoadGamesCommand}">
+            <CollectionView ItemsSource="{Binding Games}"
+                           SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="No games available" 
+                               FontSize="18" 
+                               HorizontalTextAlignment="Center"
+                               TextColor="Gray"/>
+                        <Label Text="Pull down to refresh" 
+                               FontSize="14" 
+                               HorizontalTextAlignment="Center"
+                               TextColor="Gray"
+                               Margin="0,10,0,0"/>
+                    </StackLayout>
+                </CollectionView.EmptyView>
+                
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:GameDto">
+                        <Frame Margin="0,5" 
+                               Padding="15" 
+                               BorderColor="LightGray"
+                               CornerRadius="10"
+                               HasShadow="True">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:IndexViewModel}}, Path=GameSelectedCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Frame.GestureRecognizers>
+                            
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                                <!-- Game Name -->
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontSize="20"
+                                       FontAttributes="Bold"/>
+                                
+                                <!-- Price -->
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding Price, StringFormat='${0:F2}'}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="Green"
+                                       VerticalOptions="Center"/>
+                                
+                                <!-- Description -->
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Description}"
+                                       FontSize="14"
+                                       TextColor="Gray"
+                                       MaxLines="2"
+                                       LineBreakMode="TailTruncation"
+                                       Margin="0,5,0,0"/>
+                                
+                                <!-- Categories -->
+                                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                       FontSize="12"
+                                       TextColor="DarkBlue"
+                                       Margin="0,5,0,0">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="Categories: "/>
+                                            <Span Text="{Binding Categories, Converter={StaticResource ListToStringConverter}}"/>
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                
+                                <!-- Actions -->
+                                <HorizontalStackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                                      Spacing="10"
+                                                      Margin="0,10,0,0">
+                                    <Button Text="View Details"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:IndexViewModel}}, Path=GameSelectedCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Blue"
+                                            TextColor="White"/>
+                                    
+                                    <Button Text="{Binding IsOwned, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Owned|Purchase'}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:IndexViewModel}}, Path=PurchaseGameCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{Binding IsOwned, Converter={StaticResource BoolToColorConverter}}"
+                                            TextColor="White"
+                                            IsEnabled="{Binding IsOwned, Converter={StaticResource InvertedBoolConverter}}"/>
+                                    
+                                    <Label Text="✓ Owned" 
+                                           TextColor="Green"
+                                           FontAttributes="Bold"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding IsOwned}"/>
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
 </ContentPage>

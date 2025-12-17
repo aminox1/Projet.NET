@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Administration";
+}
+
+<div class="container mt-5">
+    <h1 class="mb-4">Administration Panel</h1>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-controller"></i> Games Management
+                    </h5>
+                    <p class="card-text">Manage your game library: add, edit, or remove games.</p>
+                    <a asp-action="Games" class="btn btn-primary">Manage Games</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-tags"></i> Categories Management
+                    </h5>
+                    <p class="card-text">Organize games by categories.</p>
+                    <a asp-action="Categories" class="btn btn-primary">Manage Categories</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

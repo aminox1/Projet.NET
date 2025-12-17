@@ -45,13 +45,29 @@ namespace Gauniv.Client.Services
         [ObservableProperty]
         private string token;
         public HttpClient httpClient;
+        
+        private const string BaseUrl = "http://localhost:5231";
 
         public NetworkService() {
             httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri(BaseUrl);
             Token = null;
         }
 
         public event Action OnConnected;
+        
+        public void SetAuthToken(string token)
+        {
+            Token = token;
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue("Bearer", token);
+        }
+        
+        public void ClearAuthToken()
+        {
+            Token = null;
+            httpClient.DefaultRequestHeaders.Authorization = null;
+        }
 
     }
 }
