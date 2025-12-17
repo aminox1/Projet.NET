@@ -32,11 +32,80 @@ Please respect the team's standards for any future contribution
              xmlns:vm="clr-namespace:Gauniv.Client.ViewModel"
              x:Class="Gauniv.Client.Pages.Profile"
              Title="Profile"
-             BindingContext="{vm:ProfileViewModel}">
-    <VerticalStackLayout>
-        <Label Text="Profile" />
-    </VerticalStackLayout>
-    <!--
-    Ici on veut pouvoir changer sont nom d'utilisateur et son mot de passe ainsi que de dossier de sauvegarde des jeux
-    -->
+             x:DataType="vm:ProfileViewModel">
+    
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="20">
+            <Label Text="User Profile" 
+                   FontSize="28" 
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+            
+            <!-- Login Form -->
+            <Frame IsVisible="{Binding IsLoggedIn, Converter={StaticResource InvertedBoolConverter}}"
+                   Padding="20"
+                   CornerRadius="10"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Login to purchase and download games" 
+                           FontSize="16"
+                           HorizontalOptions="Center"/>
+                    
+                    <Entry Placeholder="Email"
+                           Text="{Binding Email}"
+                           Keyboard="Email"/>
+                    
+                    <Entry Placeholder="Password"
+                           Text="{Binding Password}"
+                           IsPassword="True"/>
+                    
+                    <Button Text="Login" 
+                            Command="{Binding LoginCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
+                    
+                    <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                     IsVisible="{Binding IsLoading}"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Logged In State -->
+            <Frame IsVisible="{Binding IsLoggedIn}"
+                   Padding="20"
+                   CornerRadius="10"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="✓ Logged In" 
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="Green"
+                           HorizontalOptions="Center"/>
+                    
+                    <Label Text="{Binding Email}" 
+                           FontSize="16"
+                           HorizontalOptions="Center"/>
+                    
+                    <Button Text="Logout" 
+                            Command="{Binding LogoutCommand}"
+                            BackgroundColor="DarkRed"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Status Message -->
+            <Label Text="{Binding StatusMessage}" 
+                   FontSize="14"
+                   TextColor="Orange"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource IsNotNullConverter}}"/>
+            
+            <!-- Quick Test Accounts -->
+            <Frame Padding="15" CornerRadius="10" BackgroundColor="LightYellow">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Test Accounts:" FontAttributes="Bold"/>
+                    <Label Text="• test@test.com / password" FontSize="12"/>
+                    <Label Text="• admin@gauniv.com / admin123 (web only)" FontSize="12"/>
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

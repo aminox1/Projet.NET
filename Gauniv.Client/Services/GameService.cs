@@ -39,19 +39,29 @@ namespace Gauniv.Client.Services
                 }
 
                 var query = string.Join("&", queryParams);
-                var response = await httpClient.GetAsync($"/api/1.0.0/Games/List?{query}");
+                var url = $"/api/1.0.0/Games/List?{query}";
+                System.Diagnostics.Debug.WriteLine($"[GameService] Fetching games from: {httpClient.BaseAddress}{url}");
+                
+                var response = await httpClient.GetAsync(url);
+                System.Diagnostics.Debug.WriteLine($"[GameService] Response status: {response.StatusCode}");
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<List<GameDto>>() ?? new List<GameDto>();
+                    var games = await response.Content.ReadFromJsonAsync<List<GameDto>>() ?? new List<GameDto>();
+                    System.Diagnostics.Debug.WriteLine($"[GameService] Received {games.Count} games");
+                    return games;
                 }
                 
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[GameService] Error response: {errorContent}");
                 return new List<GameDto>();
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[GameService] Exception: {ex.GetType().Name} - {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[GameService] StackTrace: {ex.StackTrace}");
                 Console.WriteLine($"Error fetching games: {ex.Message}");
-                return new List<GameDto>();
+                throw; // Re-throw to let ViewModel handle it
             }
         }
 
@@ -134,13 +144,33 @@ namespace Gauniv.Client.Services
         {
             try
             {
+                if (string.IsNullOrEmpty(networkService.Token))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[GameService] Cannot purchase - user not logged in");
+                    throw new UnauthorizedAccessException("You must be logged in to purchase games");
+                }
+
                 var response = await httpClient.PostAsync($"/api/1.0.0/Games/Purchase/{gameId}", null);
-                return response.IsSuccessStatusCode;
+                
+                System.Diagnostics.Debug.WriteLine($"[GameService] Purchase response: {response.StatusCode}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[GameService] Purchase failed: {errorContent}");
+                throw new Exception(errorContent);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error purchasing game: {ex.Message}");
-                return false;
+                System.Diagnostics.Debug.WriteLine($"[GameService] Error purchasing game: {ex.Message}");
+                throw new Exception($"Purchase failed: {ex.Message}");
             }
         }
 
@@ -197,11 +227,17 @@ namespace Gauniv.Client.Services
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Get the token from response headers or cookies
-                    // This depends on your authentication setup
-                    return true;
+                    var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                    if (result?.AccessToken != null)
+                    {
+                        networkService.SetAuthToken(result.AccessToken);
+                        System.Diagnostics.Debug.WriteLine($"[GameService] Login successful, token saved");
+                        return true;
+                    }
                 }
                 
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[GameService] Login failed: {errorContent}");
                 return false;
             }
             catch (Exception ex)

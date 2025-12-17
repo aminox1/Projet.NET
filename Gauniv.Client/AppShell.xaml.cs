@@ -26,6 +26,8 @@
 // 
 // Please respect the team's standards for any future contribution
 #endregion
+using Gauniv.Client.Pages;
+
 namespace Gauniv.Client
 {
     public partial class AppShell : Shell
@@ -33,6 +35,9 @@ namespace Gauniv.Client
         public AppShell()
         {
             InitializeComponent();
+            
+            // Register routes for navigation
+            Routing.RegisterRoute("gamedetails", typeof(GameDetails));
         }
     }
 }

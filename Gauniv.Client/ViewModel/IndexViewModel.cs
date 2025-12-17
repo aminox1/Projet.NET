@@ -41,7 +41,9 @@ namespace Gauniv.Client.ViewModel
             IsLoading = true;
             try
             {
+                Debug.WriteLine("Starting to load games...");
                 var loadedGames = await gameService.GetGamesAsync(0, 50, null, SearchText);
+                Debug.WriteLine($"Loaded {loadedGames.Count} games from API");
                 
                 // Update local download status
                 foreach (var game in loadedGames)
@@ -55,10 +57,14 @@ namespace Gauniv.Client.ViewModel
                 {
                     Games.Add(game);
                 }
+                
+                Debug.WriteLine($"Games collection now has {Games.Count} items");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error loading games: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                await Application.Current.MainPage.DisplayAlert("Error", $"Failed to load games: {ex.Message}", "OK");
             }
             finally
             {

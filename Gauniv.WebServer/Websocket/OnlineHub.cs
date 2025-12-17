@@ -52,10 +52,64 @@ namespace Gauniv.WebServer.Websocket
 
         public async override Task OnConnectedAsync()
         {
+            var user = Context.User;
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                var userId = userManager.GetUserId(user);
+                if (userId != null)
+                {
+                    if (ConnectedUsers.ContainsKey(userId))
+                    {
+                        ConnectedUsers[userId].Count++;
+                    }
+                    else
+                    {
+                        var dbUser = await userManager.FindByIdAsync(userId);
+                        if (dbUser != null)
+                        {
+                            ConnectedUsers[userId] = new OnlineStatus
+                            {
+                                User = dbUser,
+                                Count = 1
+                            };
+                        }
+                    }
+                    await Clients.All.SendAsync("ReceiveMessage", $"User {user.Identity.Name} connected. Total online: {ConnectedUsers.Count}");
+                }
+            }
+            await base.OnConnectedAsync();
         }
 
         public async override Task OnDisconnectedAsync(Exception? exception)
         {
+            var user = Context.User;
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                var userId = userManager.GetUserId(user);
+                if (userId != null && ConnectedUsers.ContainsKey(userId))
+                {
+                    ConnectedUsers[userId].Count--;
+                    if (ConnectedUsers[userId].Count <= 0)
+                    {
+                        ConnectedUsers.Remove(userId);
+                    }
+                    await Clients.All.SendAsync("ReceiveMessage", $"User {user.Identity.Name} disconnected. Total online: {ConnectedUsers.Count}");
+                }
+            }
+            await base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task SendMessage()
+        {
+            // Return current online users count
+            await Clients.Caller.SendAsync("ReceiveMessage", $"Currently {ConnectedUsers.Count} users online");
+        }
+
+        public async Task GetOnlineUsers()
+        {
+            // Return list of online users
+            var onlineUserNames = ConnectedUsers.Values.Select(x => x.User.UserName).ToList();
+            await Clients.Caller.SendAsync("ReceiveOnlineUsers", onlineUserNames);
         }
     }
 }

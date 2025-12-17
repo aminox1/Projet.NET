@@ -46,12 +46,20 @@ namespace Gauniv.Client.Services
         private string token;
         public HttpClient httpClient;
         
-        private const string BaseUrl = "http://localhost:5231";
+        // Use 127.0.0.1 instead of localhost for Windows loopback exemption
+        private const string BaseUrl = "http://127.0.0.1:5231";
 
         public NetworkService() {
-            httpClient = new HttpClient();
+            var handler = new HttpClientHandler();
+            // Allow all certificates in development
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+            
+            httpClient = new HttpClient(handler);
             httpClient.BaseAddress = new Uri(BaseUrl);
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
             Token = null;
+            
+            System.Diagnostics.Debug.WriteLine($"[NetworkService] Initialized with BaseUrl: {BaseUrl}");
         }
 
         public event Action OnConnected;

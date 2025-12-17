@@ -34,4 +34,12 @@ namespace Gauniv.Client.Models
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
     }
+
+    public class LoginResponse
+    {
+        public string? TokenType { get; set; }
+        public string? AccessToken { get; set; }
+        public int ExpiresIn { get; set; }
+        public string? RefreshToken { get; set; }
+    }
 }
