@@ -62,19 +62,23 @@ namespace Gauniv.Client.Services
             System.Diagnostics.Debug.WriteLine($"[NetworkService] Initialized with BaseUrl: {BaseUrl}");
         }
 
-        public event Action OnConnected;
+        public event Action? OnConnected;
         
         public void SetAuthToken(string token)
         {
             Token = token;
             httpClient.DefaultRequestHeaders.Authorization = 
                 new AuthenticationHeaderValue("Bearer", token);
+            
+            System.Diagnostics.Debug.WriteLine($"[NetworkService] Auth token set, triggering OnConnected event");
+            OnConnected?.Invoke();
         }
         
         public void ClearAuthToken()
         {
             Token = null;
             httpClient.DefaultRequestHeaders.Authorization = null;
+            System.Diagnostics.Debug.WriteLine($"[NetworkService] Auth token cleared");
         }
 
     }

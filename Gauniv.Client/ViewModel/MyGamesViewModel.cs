@@ -38,13 +38,16 @@ namespace Gauniv.Client.ViewModel
             IsLoading = true;
             try
             {
+                Debug.WriteLine("[MyGamesViewModel] Loading my games...");
                 var loadedGames = await gameService.GetMyGamesAsync(0, 50);
+                Debug.WriteLine($"[MyGamesViewModel] Loaded {loadedGames.Count} owned games");
                 
                 // Update local download status
                 foreach (var game in loadedGames)
                 {
                     game.IsDownloaded = localGameManager.IsGameDownloaded(game.Id);
                     game.IsRunning = localGameManager.IsGameRunning(game.Id);
+                    Debug.WriteLine($"[MyGamesViewModel] Game: {game.Name}, Downloaded: {game.IsDownloaded}");
                 }
                 
                 MyGames.Clear();
@@ -52,10 +55,14 @@ namespace Gauniv.Client.ViewModel
                 {
                     MyGames.Add(game);
                 }
+                
+                Debug.WriteLine($"[MyGamesViewModel] MyGames collection now has {MyGames.Count} items");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading my games: {ex.Message}");
+                Debug.WriteLine($"[MyGamesViewModel] Error loading my games: {ex.Message}");
+                Debug.WriteLine($"[MyGamesViewModel] StackTrace: {ex.StackTrace}");
+                await Application.Current.MainPage.DisplayAlert("Error", $"Failed to load owned games: {ex.Message}", "OK");
             }
             finally
             {

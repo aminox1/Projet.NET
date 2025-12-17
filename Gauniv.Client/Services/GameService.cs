@@ -69,6 +69,12 @@ namespace Gauniv.Client.Services
         {
             try
             {
+                if (string.IsNullOrEmpty(networkService.Token))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[GameService] GetMyGames - No auth token, user not logged in");
+                    return new List<GameDto>();
+                }
+
                 var queryParams = new List<string>
                 {
                     $"offset={offset}",
@@ -84,13 +90,21 @@ namespace Gauniv.Client.Services
                 }
 
                 var query = string.Join("&", queryParams);
-                var response = await httpClient.GetAsync($"/api/1.0.0/Games/MyGames?{query}");
+                var url = $"/api/1.0.0/Games/MyGames?{query}";
+                System.Diagnostics.Debug.WriteLine($"[GameService] Fetching my games from: {httpClient.BaseAddress}{url}");
+                
+                var response = await httpClient.GetAsync(url);
+                System.Diagnostics.Debug.WriteLine($"[GameService] MyGames response status: {response.StatusCode}");
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<List<GameDto>>() ?? new List<GameDto>();
+                    var games = await response.Content.ReadFromJsonAsync<List<GameDto>>() ?? new List<GameDto>();
+                    System.Diagnostics.Debug.WriteLine($"[GameService] Received {games.Count} owned games");
+                    return games;
                 }
                 
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[GameService] MyGames error: {errorContent}");
                 return new List<GameDto>();
             }
             catch (Exception ex)

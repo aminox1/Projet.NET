@@ -126,9 +126,14 @@ namespace Gauniv.WebServer.Api
             [FromQuery] int limit = 10,
             [FromQuery] int[]? category = null)
         {
+            Console.WriteLine($"[MyGames] Request received, User.Identity.IsAuthenticated: {User.Identity?.IsAuthenticated}");
+            
             var local_userId = userManager.GetUserId(User);
+            Console.WriteLine($"[MyGames] UserId: {local_userId}");
+            
             if (local_userId == null)
             {
+                Console.WriteLine($"[MyGames] UserId is null, returning Unauthorized");
                 return Unauthorized();
             }
 
@@ -147,6 +152,8 @@ namespace Gauniv.WebServer.Api
                 .Skip(offset)
                 .Take(limit)
                 .ToListAsync();
+
+            Console.WriteLine($"[MyGames] Found {local_games.Count} owned games for user {local_userId}");
 
             var local_result = local_games.Select(g => new GameDto
             {
@@ -260,8 +267,10 @@ namespace Gauniv.WebServer.Api
             }
 
             // Ajouter le jeu à la liste des jeux possédés
+            Console.WriteLine($"[Purchase] User {local_userId} ({local_user.Email}) purchasing game {id} ({local_game.Name})");
             local_user.OwnedGames.Add(local_game);
             await appDbContext.SaveChangesAsync();
+            Console.WriteLine($"[Purchase] Game purchased successfully. User now owns {local_user.OwnedGames.Count} games");
 
             return Ok(new { message = "Game purchased successfully" });
         }

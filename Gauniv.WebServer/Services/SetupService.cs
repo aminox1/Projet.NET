@@ -121,6 +121,29 @@ namespace Gauniv.WebServer.Services
                     var adventureCategory = applicationDbContext.Categories.First(c => c.Name == "Adventure");
                     var rpgCategory = applicationDbContext.Categories.First(c => c.Name == "RPG");
 
+                    // Create demo game files
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "games");
+                    Directory.CreateDirectory(uploadsFolder);
+
+                    // Create simple text files as demo games (in production, these would be real executables)
+                    var demoFiles = new Dictionary<string, string>
+                    {
+                        { "epic_quest_demo.txt", "This is Epic Quest Demo Game\nPress any key to start adventure..." },
+                        { "space_shooter_demo.txt", "Space Shooter Demo\nUse arrow keys to move, Space to shoot!" },
+                        { "fantasy_world_demo.txt", "Fantasy World Demo\nBuild your kingdom and rule the lands!" }
+                    };
+
+                    var gamePaths = new List<string>();
+                    foreach (var demo in demoFiles)
+                    {
+                        var filePath = Path.Combine(uploadsFolder, demo.Key);
+                        if (!File.Exists(filePath))
+                        {
+                            File.WriteAllText(filePath, demo.Value);
+                        }
+                        gamePaths.Add(filePath);
+                    }
+
                     var games = new List<Game>
                     {
                         new Game 
@@ -128,6 +151,8 @@ namespace Gauniv.WebServer.Services
                             Name = "Epic Quest", 
                             Description = "An epic adventure through mystical lands", 
                             Price = 29.99m,
+                            PayloadPath = gamePaths[0],
+                            Size = new FileInfo(gamePaths[0]).Length,
                             Categories = new List<Category> { adventureCategory, rpgCategory }
                         },
                         new Game 
@@ -135,6 +160,8 @@ namespace Gauniv.WebServer.Services
                             Name = "Space Shooter", 
                             Description = "Fast-paced space combat action", 
                             Price = 19.99m,
+                            PayloadPath = gamePaths[1],
+                            Size = new FileInfo(gamePaths[1]).Length,
                             Categories = new List<Category> { actionCategory }
                         },
                         new Game 
@@ -142,6 +169,8 @@ namespace Gauniv.WebServer.Services
                             Name = "Fantasy World", 
                             Description = "Build your own fantasy kingdom", 
                             Price = 39.99m,
+                            PayloadPath = gamePaths[2],
+                            Size = new FileInfo(gamePaths[2]).Length,
                             Categories = new List<Category> { rpgCategory, adventureCategory }
                         }
                     };

@@ -99,7 +99,18 @@ namespace Gauniv.Client.ViewModel
                 if (success)
                 {
                     game.IsOwned = true;
-                    await Application.Current.MainPage.DisplayAlert("Success", $"{game.Name} purchased successfully!", "OK");
+                    var goToMyGames = await Application.Current.MainPage.DisplayAlert(
+                        "Success", 
+                        $"{game.Name} purchased successfully!\n\nGo to 'My Games' to download and play it.", 
+                        "Go to My Games", 
+                        "Stay Here");
+                    
+                    if (goToMyGames)
+                    {
+                        // Navigate to My Games tab
+                        Shell.Current.FlyoutIsPresented = false;
+                        await Shell.Current.GoToAsync("///mygames");
+                    }
                 }
                 else
                 {
