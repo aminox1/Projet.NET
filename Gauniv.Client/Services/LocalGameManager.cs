@@ -1,6 +1,7 @@
 using Gauniv.Client.Models;
 using System.Diagnostics;
 using System.Text.Json;
+using System.IO.Compression;
 
 namespace Gauniv.Client.Services
 {
@@ -155,11 +156,45 @@ namespace Gauniv.Client.Services
 
             try
             {
-                // For demo purposes, open the file with default application
-                // In a real scenario, you'd extract the ZIP and run the executable
+                // Extract ZIP file and run the game executable
+                var zipPath = metadata.LocalPath;
+                if (!File.Exists(zipPath))
+                {
+                    Debug.WriteLine($"[LocalGameManager] Game ZIP not found: {zipPath}");
+                    return false;
+                }
+
+                // Extract to a subfolder
+                var extractPath = Path.Combine(Path.GetDirectoryName(zipPath)!, "Extracted");
+                
+                // Extract if not already extracted
+                if (!Directory.Exists(extractPath))
+                {
+                    Debug.WriteLine($"[LocalGameManager] Extracting game to: {extractPath}");
+                    System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, extractPath);
+                }
+
+                // Find the .bat file (game executable)
+                var batFiles = Directory.GetFiles(extractPath, "*.bat");
+                if (batFiles.Length == 0)
+                {
+                    Debug.WriteLine($"[LocalGameManager] No .bat file found in extracted game");
+                    // Try to open the extracted folder instead
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = extractPath,
+                        UseShellExecute = true
+                    });
+                    return true;
+                }
+
+                var gameExe = batFiles[0];
+                Debug.WriteLine($"[LocalGameManager] Launching game executable: {gameExe}");
+
                 var processInfo = new ProcessStartInfo
                 {
-                    FileName = metadata.LocalPath,
+                    FileName = gameExe,
+                    WorkingDirectory = extractPath,
                     UseShellExecute = true
                 };
 
@@ -173,6 +208,7 @@ namespace Gauniv.Client.Services
                     {
                         metadata.IsRunning = false;
                         metadata.GameProcess = null;
+                        Debug.WriteLine($"[LocalGameManager] Game {gameId} process exited");
                     };
                 }
 
@@ -180,7 +216,8 @@ namespace Gauniv.Client.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error launching game: {ex.Message}");
+                Debug.WriteLine($"[LocalGameManager] Error launching game: {ex.Message}");
+                Debug.WriteLine($"[LocalGameManager] StackTrace: {ex.StackTrace}");
                 metadata.IsRunning = false;
                 return false;
             }

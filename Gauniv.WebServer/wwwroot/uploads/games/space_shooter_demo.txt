@@ -1,2 +1,0 @@
-Space Shooter Demo
-Use arrow keys to move, Space to shoot!

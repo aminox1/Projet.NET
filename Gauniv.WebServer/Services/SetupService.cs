@@ -34,6 +34,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using System.Text;
+using System.IO.Compression;
 
 namespace Gauniv.WebServer.Services
 {
@@ -121,28 +122,36 @@ namespace Gauniv.WebServer.Services
                     var adventureCategory = applicationDbContext.Categories.First(c => c.Name == "Adventure");
                     var rpgCategory = applicationDbContext.Categories.First(c => c.Name == "RPG");
 
-                    // Create demo game files
+                    // Create demo game files - stored OUTSIDE database as per professor's requirement
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "games");
                     Directory.CreateDirectory(uploadsFolder);
 
-                    // Create simple text files as demo games (in production, these would be real executables)
-                    var demoFiles = new Dictionary<string, string>
-                    {
-                        { "epic_quest_demo.txt", "This is Epic Quest Demo Game\nPress any key to start adventure..." },
-                        { "space_shooter_demo.txt", "Space Shooter Demo\nUse arrow keys to move, Space to shoot!" },
-                        { "fantasy_world_demo.txt", "Fantasy World Demo\nBuild your kingdom and rule the lands!" }
-                    };
-
+                    // Create demo ZIP files with actual game executables
                     var gamePaths = new List<string>();
-                    foreach (var demo in demoFiles)
+                    
+                    // Game 1: Epic Quest
+                    var epicQuestZip = Path.Combine(uploadsFolder, "Epic_Quest.zip");
+                    if (!File.Exists(epicQuestZip))
                     {
-                        var filePath = Path.Combine(uploadsFolder, demo.Key);
-                        if (!File.Exists(filePath))
-                        {
-                            File.WriteAllText(filePath, demo.Value);
-                        }
-                        gamePaths.Add(filePath);
+                        CreateDemoGameZip(epicQuestZip, "Epic Quest", "Welcome to Epic Quest!\n\nThis is a demo adventure game.");
                     }
+                    gamePaths.Add(epicQuestZip);
+                    
+                    // Game 2: Space Shooter
+                    var spaceShooterZip = Path.Combine(uploadsFolder, "Space_Shooter.zip");
+                    if (!File.Exists(spaceShooterZip))
+                    {
+                        CreateDemoGameZip(spaceShooterZip, "Space Shooter", "Space Shooter Demo\n\nUse arrow keys to move, Space to shoot!");
+                    }
+                    gamePaths.Add(spaceShooterZip);
+                    
+                    // Game 3: Fantasy World
+                    var fantasyWorldZip = Path.Combine(uploadsFolder, "Fantasy_World.zip");
+                    if (!File.Exists(fantasyWorldZip))
+                    {
+                        CreateDemoGameZip(fantasyWorldZip, "Fantasy World", "Fantasy World Demo\n\nBuild your kingdom and rule the lands!");
+                    }
+                    gamePaths.Add(fantasyWorldZip);
 
                     var games = new List<Game>
                     {
@@ -180,6 +189,66 @@ namespace Gauniv.WebServer.Services
                 applicationDbContext.SaveChanges();
 
                 return Task.CompletedTask;
+            }
+        }
+        
+        /// <summary>
+        /// Creates a demo game ZIP file with a simple executable
+        /// Games are stored on filesystem as per professor's requirement (not in database)
+        /// </summary>
+        private void CreateDemoGameZip(string zipPath, string gameName, string description)
+        {
+            // Create a temporary directory for game files
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                // Create a batch file that acts as the game executable
+                var exePath = Path.Combine(tempDir, $"{gameName.Replace(" ", "_")}.bat");
+                var batchContent = $@"@echo off
+title {gameName}
+color 0A
+cls
+echo ========================================
+echo {gameName}
+echo ========================================
+echo.
+echo {description}
+echo.
+echo Press any key to exit...
+pause > nul
+";
+                File.WriteAllText(exePath, batchContent);
+
+                // Create a README file
+                var readmePath = Path.Combine(tempDir, "README.txt");
+                File.WriteAllText(readmePath, $@"{gameName}
+{description}
+
+To play:
+1. Extract this ZIP file
+2. Run {gameName.Replace(" ", "_")}.bat
+
+Enjoy!
+");
+
+                // Create the ZIP file with streaming to minimize memory usage
+                using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+                {
+                    archive.CreateEntryFromFile(exePath, Path.GetFileName(exePath));
+                    archive.CreateEntryFromFile(readmePath, Path.GetFileName(readmePath));
+                }
+
+                Console.WriteLine($"[SetupService] Created demo game ZIP: {zipPath} ({new FileInfo(zipPath).Length} bytes)");
+            }
+            finally
+            {
+                // Clean up temp directory
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
             }
         }
 
