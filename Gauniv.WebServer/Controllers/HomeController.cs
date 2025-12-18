@@ -47,9 +47,126 @@ namespace Gauniv.WebServer.Controllers
         private readonly ApplicationDbContext applicationDbContext = applicationDbContext;
         private readonly UserManager<User> userManager = userManager;
 
-        public IActionResult Index()
+        [AllowAnonymous]
+        public async Task<IActionResult> Index(string? search, int? categoryId, decimal? minPrice, decimal? maxPrice, bool? ownedOnly)
         {
-            return View(new List<Game> { new() { Id = 0 } });
+            var query = applicationDbContext.Games
+                .Include(g => g.Categories)
+                .Include(g => g.Owners)
+                .AsQueryable();
+
+            // Filter by search text
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(g => g.Name.Contains(search) || g.Description.Contains(search));
+            }
+
+            // Filter by category
+            if (categoryId.HasValue && categoryId.Value > 0)
+            {
+                query = query.Where(g => g.Categories.Any(c => c.Id == categoryId.Value));
+            }
+
+            // Filter by price range
+            if (minPrice.HasValue)
+            {
+                query = query.Where(g => g.Price >= minPrice.Value);
+            }
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(g => g.Price <= maxPrice.Value);
+            }
+
+            var games = await query.OrderBy(g => g.Name).ToListAsync();
+
+            // Check ownership for logged-in users
+            var isAdmin = false;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = userManager.GetUserId(User);
+                if (userId != null)
+                {
+                    // Check if user is admin
+                    var user = await userManager.FindByIdAsync(userId);
+                    if (user != null)
+                    {
+                        isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+                    }
+                    
+                    var ownedGameIds = await applicationDbContext.Games
+                        .Where(g => g.Owners.Any(o => o.Id == userId))
+                        .Select(g => g.Id)
+                        .ToListAsync();
+
+                    foreach (var game in games)
+                    {
+                        game.IsOwnedByCurrentUser = ownedGameIds.Contains(game.Id);
+                    }
+
+                    // Filter by ownership if requested
+                    if (ownedOnly.HasValue)
+                    {
+                        games = games.Where(g => g.IsOwnedByCurrentUser == ownedOnly.Value).ToList();
+                    }
+                }
+            }
+
+            // Load categories for filter dropdown
+            ViewBag.Categories = await applicationDbContext.Categories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Search = search;
+            ViewBag.CategoryId = categoryId;
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
+            ViewBag.OwnedOnly = ownedOnly;
+            ViewBag.IsAdmin = isAdmin;
+
+            return View(games);
+        }
+        
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> PurchaseGame(int gameId)
+        {
+            var userId = userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var user = await applicationDbContext.Users
+                .Include(u => u.OwnedGames)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is admin
+            var isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+            if (isAdmin)
+            {
+                TempData["ErrorMessage"] = "Admins cannot purchase games. Only regular users can purchase.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var game = await applicationDbContext.Games.FindAsync(gameId);
+            if (game == null)
+            {
+                return NotFound();
+            }
+
+            if (user.OwnedGames.Any(g => g.Id == gameId))
+            {
+                TempData["ErrorMessage"] = "You already own this game!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            user.OwnedGames.Add(game);
+            await applicationDbContext.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Successfully purchased {game.Name}!";
+            return RedirectToAction(nameof(Index));
         }
 
 

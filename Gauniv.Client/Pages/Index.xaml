@@ -36,16 +36,107 @@ Please respect the team's standards for any future contribution
              Title="All Games"
              x:DataType="vm:IndexViewModel">
     
-    <Grid RowDefinitions="Auto,*" Padding="10">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="10">
         <!-- Search Bar -->
         <SearchBar Grid.Row="0"
-                   Placeholder="Search games..."
+                   Placeholder="Search games by name or description..."
                    Text="{Binding SearchText}"
-                   SearchCommand="{Binding SearchGamesCommand}"
-                   Margin="0,0,0,10"/>
+                   Margin="0,0,0,5"/>
+        
+        <!-- Filters Section -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10" HeightRequest="60">
+            <HorizontalStackLayout Spacing="8">
+                <!-- Category Filter -->
+                <Border StrokeThickness="1" 
+                        Stroke="LightGray" 
+                        Padding="8"
+                        BackgroundColor="White"
+                        StrokeShape="RoundRectangle 8"
+                        HeightRequest="50">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="📂" FontSize="14" VerticalOptions="Center"/>
+                        <Picker ItemsSource="{Binding Categories}"
+                                SelectedItem="{Binding SelectedCategory}"
+                                ItemDisplayBinding="{Binding Name}"
+                                WidthRequest="120"
+                                VerticalOptions="Center"
+                                FontSize="12"/>
+                    </HorizontalStackLayout>
+                </Border>
+                
+                <!-- Price Range -->
+                <Border StrokeThickness="1" 
+                        Stroke="LightGray" 
+                        Padding="8"
+                        BackgroundColor="White"
+                        StrokeShape="RoundRectangle 8"
+                        HeightRequest="50">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="💰" FontSize="14" VerticalOptions="Center"/>
+                        <Entry Text="{Binding MinPrice}" 
+                               Placeholder="Min" 
+                               Keyboard="Numeric"
+                               WidthRequest="50"
+                               VerticalOptions="Center"
+                               FontSize="12"/>
+                        <Label Text="-" VerticalOptions="Center" FontSize="12"/>
+                        <Entry Text="{Binding MaxPrice}" 
+                               Placeholder="Max" 
+                               Keyboard="Numeric"
+                               WidthRequest="50"
+                               VerticalOptions="Center"
+                               FontSize="12"/>
+                    </HorizontalStackLayout>
+                </Border>
+                
+                <!-- Ownership Filters -->
+                <Border StrokeThickness="1" 
+                        Stroke="LightGray" 
+                        Padding="8"
+                        BackgroundColor="White"
+                        StrokeShape="RoundRectangle 8"
+                        HeightRequest="50">
+                    <HorizontalStackLayout Spacing="3">
+                        <CheckBox IsChecked="{Binding ShowOwnedOnly}" 
+                                  VerticalOptions="Center"
+                                  Scale="0.8"/>
+                        <Label Text="Owned" 
+                               VerticalOptions="Center"
+                               TextColor="Green"
+                               FontSize="12"/>
+                    </HorizontalStackLayout>
+                </Border>
+                
+                <Border StrokeThickness="1" 
+                        Stroke="LightGray" 
+                        Padding="8"
+                        BackgroundColor="White"
+                        StrokeShape="RoundRectangle 8"
+                        HeightRequest="50">
+                    <HorizontalStackLayout Spacing="3">
+                        <CheckBox IsChecked="{Binding ShowNotOwnedOnly}" 
+                                  VerticalOptions="Center"
+                                  Scale="0.8"/>
+                        <Label Text="Not Owned" 
+                               VerticalOptions="Center"
+                               TextColor="OrangeRed"
+                               FontSize="12"/>
+                    </HorizontalStackLayout>
+                </Border>
+                
+                <!-- Clear Filters Button -->
+                <Button Text="🔄 Clear"
+                        Command="{Binding ClearFiltersCommand}"
+                        BackgroundColor="DarkGray"
+                        TextColor="White"
+                        Padding="12,0"
+                        FontSize="12"
+                        HeightRequest="50"/>
+            </HorizontalStackLayout>
+        </ScrollView>
 
         <!-- Games List -->
-        <RefreshView Grid.Row="1" 
+        <RefreshView Grid.Row="2" 
                      IsRefreshing="{Binding IsLoading}"
                      Command="{Binding LoadGamesCommand}">
             <CollectionView ItemsSource="{Binding Games}"

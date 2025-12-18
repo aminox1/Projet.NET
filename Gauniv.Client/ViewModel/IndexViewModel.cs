@@ -21,17 +21,39 @@ namespace Gauniv.Client.ViewModel
 
         [ObservableProperty]
         private ObservableCollection<GameDto> games = new();
+        
+        [ObservableProperty]
+        private ObservableCollection<CategoryDto> categories = new();
+        
+        [ObservableProperty]
+        private List<GameDto> allGames = new();
 
         [ObservableProperty]
         private bool isLoading;
 
         [ObservableProperty]
         private string searchText = string.Empty;
+        
+        [ObservableProperty]
+        private decimal minPrice;
+        
+        [ObservableProperty]
+        private decimal maxPrice = 1000;
+        
+        [ObservableProperty]
+        private CategoryDto? selectedCategory;
+        
+        [ObservableProperty]
+        private bool showOwnedOnly;
+        
+        [ObservableProperty]
+        private bool showNotOwnedOnly;
 
         public IndexViewModel()
         {
             gameService = new GameService();
             localGameManager = LocalGameManager.Instance;
+            _ = LoadCategoriesAsync();
             _ = LoadGamesAsync();
         }
 
@@ -42,7 +64,7 @@ namespace Gauniv.Client.ViewModel
             try
             {
                 Debug.WriteLine("Starting to load games...");
-                var loadedGames = await gameService.GetGamesAsync(0, 50, null, SearchText);
+                var loadedGames = await gameService.GetGamesAsync(0, 200, null, null);
                 Debug.WriteLine($"Loaded {loadedGames.Count} games from API");
                 
                 // Update local download status
@@ -52,13 +74,10 @@ namespace Gauniv.Client.ViewModel
                     game.IsRunning = localGameManager.IsGameRunning(game.Id);
                 }
                 
-                Games.Clear();
-                foreach (var game in loadedGames)
-                {
-                    Games.Add(game);
-                }
+                AllGames = loadedGames;
+                ApplyFilters();
                 
-                Debug.WriteLine($"Games collection now has {Games.Count} items");
+                Debug.WriteLine($"Games collection now has {Games.Count} items after filters");
             }
             catch (Exception ex)
             {
@@ -71,11 +90,105 @@ namespace Gauniv.Client.ViewModel
                 IsLoading = false;
             }
         }
+        
+        [RelayCommand]
+        private async Task LoadCategoriesAsync()
+        {
+            try
+            {
+                Debug.WriteLine("Loading categories...");
+                var loadedCategories = await gameService.GetCategoriesAsync();
+                Categories.Clear();
+                Categories.Add(new CategoryDto { Id = 0, Name = "All Categories" });
+                foreach (var category in loadedCategories)
+                {
+                    Categories.Add(category);
+                }
+                SelectedCategory = Categories.FirstOrDefault();
+                Debug.WriteLine($"Loaded {Categories.Count} categories");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading categories: {ex.Message}");
+            }
+        }
+        
+        private void ApplyFilters()
+        {
+            var filtered = AllGames.AsEnumerable();
+            
+            // Filter by search text
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                filtered = filtered.Where(g => 
+                    g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    g.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+            }
+            
+            // Filter by category
+            if (SelectedCategory != null && SelectedCategory.Id != 0)
+            {
+                filtered = filtered.Where(g => g.Categories.Any(c => c.Id == SelectedCategory.Id));
+            }
+            
+            // Filter by price range
+            filtered = filtered.Where(g => g.Price >= MinPrice && g.Price <= MaxPrice);
+            
+            // Filter by ownership
+            if (ShowOwnedOnly)
+            {
+                filtered = filtered.Where(g => g.IsOwned);
+            }
+            if (ShowNotOwnedOnly)
+            {
+                filtered = filtered.Where(g => !g.IsOwned);
+            }
+            
+            Games.Clear();
+            foreach (var game in filtered)
+            {
+                Games.Add(game);
+            }
+        }
 
         [RelayCommand]
-        private async Task SearchGamesAsync()
+        private void SearchGames()
         {
-            await LoadGamesAsync();
+            ApplyFilters();
+        }
+        
+        [RelayCommand]
+        private void ClearFilters()
+        {
+            SearchText = string.Empty;
+            MinPrice = 0;
+            MaxPrice = 1000;
+            SelectedCategory = Categories.FirstOrDefault();
+            ShowOwnedOnly = false;
+            ShowNotOwnedOnly = false;
+            ApplyFilters();
+        }
+        
+        partial void OnSearchTextChanged(string value)
+        {
+            ApplyFilters();
+        }
+        
+        partial void OnSelectedCategoryChanged(CategoryDto? value)
+        {
+            ApplyFilters();
+        }
+        
+        partial void OnShowOwnedOnlyChanged(bool value)
+        {
+            if (value) ShowNotOwnedOnly = false;
+            ApplyFilters();
+        }
+        
+        partial void OnShowNotOwnedOnlyChanged(bool value)
+        {
+            if (value) ShowOwnedOnly = false;
+            ApplyFilters();
         }
 
         [RelayCommand]

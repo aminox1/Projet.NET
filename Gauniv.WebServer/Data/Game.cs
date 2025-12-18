@@ -60,5 +60,9 @@ namespace Gauniv.WebServer.Data
         public ICollection<Category> Categories { get; set; } = new List<Category>();
         
         public ICollection<User> Owners { get; set; } = new List<User>();
+        
+        // Not mapped - used for UI display
+        [NotMapped]
+        public bool IsOwnedByCurrentUser { get; set; }
     }
 }
