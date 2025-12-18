@@ -32,9 +32,19 @@ namespace Gauniv.Client.Pages;
 
 public partial class MyGames : ContentPage
 {
+	private MyGamesViewModel? viewModel;
+	
 	public MyGames()
 	{
 		InitializeComponent();
-		BindingContext = new MyGamesViewModel();
+		viewModel = new MyGamesViewModel();
+		BindingContext = viewModel;
+	}
+	
+	protected override void OnAppearing()
+	{
+		base.OnAppearing();
+		// Reload games when page appears
+		viewModel?.LoadMyGamesCommand.Execute(null);
 	}
 }
