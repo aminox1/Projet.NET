@@ -1,6 +1,8 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace Gauniv.Client.Models
 {
-    public class GameDto
+    public partial class GameDto : ObservableObject
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -10,10 +12,13 @@ namespace Gauniv.Client.Models
         public List<CategoryDto> Categories { get; set; } = new();
         public bool IsOwned { get; set; }
         
-        // Local properties for client
-        public bool IsDownloaded { get; set; }
+        [ObservableProperty]
+        private bool isDownloaded;
+        
         public string LocalPath { get; set; } = string.Empty;
-        public bool IsRunning { get; set; }
+        
+        [ObservableProperty]
+        private bool isRunning;
     }
 
     public class CategoryDto

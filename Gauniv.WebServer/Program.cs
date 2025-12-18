@@ -81,6 +81,20 @@ builder.Services.AddIdentityApiEndpoints<User>(options => {
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
 }).AddRoles<IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Configure file upload limits for game files (500 MB max)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 524_288_000; // 500 MB
+    options.ValueLengthLimit = 524_288_000;
+    options.BufferBodyLengthLimit = 524_288_000;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 524_288_000; // 500 MB
+});
+
 builder.Services.AddControllersWithViews().AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix).AddDataAnnotationsLocalization();
 builder.Services.AddOpenApi(options =>
 {

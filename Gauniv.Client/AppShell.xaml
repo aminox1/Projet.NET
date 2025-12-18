@@ -7,10 +7,13 @@
        xmlns:vm="clr-namespace:Gauniv.Client.ViewModel"
        xmlns:service="clr-namespace:Gauniv.Client.Services"
        Shell.FlyoutBehavior="Flyout"
-       Shell.NavBarIsVisible="false"
-       Title="Gauniv.Client"
+       Shell.NavBarIsVisible="True"
+       Title="Gauniv"
        BindingContext="{vm:MenuViewModel}"
-       x:DataType="vm:MenuViewModel">
+       x:DataType="vm:MenuViewModel"
+       Shell.FlyoutBackgroundColor="#1a1a1a"
+       Shell.BackgroundColor="#0d0d0d"
+       Shell.ForegroundColor="White">
 
     <!--<MenuItem Text="Help"
               IconImageSource="help.png"

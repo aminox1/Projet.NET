@@ -52,9 +52,18 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Game Binary (Optional)</label>
-            <input type="file" name="payload" class="form-control" accept=".zip,.rar,.7z,.exe" />
-            <small class="form-text text-muted">Upload the game binary file (ZIP, RAR, 7Z, or EXE)</small>
+            <label class="form-label">Game Binary</label>
+            <input type="file" name="payload" class="form-control" accept=".zip" required />
+            <div class="alert alert-info mt-2">
+                <i class="bi bi-info-circle"></i> 
+                <strong>Upload Instructions:</strong>
+                <ul class="mb-0">
+                    <li>Upload a ZIP file containing your game</li>
+                    <li>The ZIP should contain a .bat or .exe file to launch the game</li>
+                    <li>Example: You can upload a simple game like Snake, Tic-Tac-Toe, etc.</li>
+                    <li>The ZIP will be stored and streamed to users when they download</li>
+                </ul>
+            </div>
         </div>
 
         <div class="mt-4">

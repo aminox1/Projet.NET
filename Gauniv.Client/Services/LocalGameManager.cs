@@ -174,22 +174,33 @@ namespace Gauniv.Client.Services
                     System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, extractPath);
                 }
 
-                // Find the .bat file (game executable)
-                var batFiles = Directory.GetFiles(extractPath, "*.bat");
-                if (batFiles.Length == 0)
+                // Find the game executable - try .bat first, then .exe
+                string? gameExe = null;
+                
+                // Try to find .bat file first
+                var batFiles = Directory.GetFiles(extractPath, "*.bat", SearchOption.AllDirectories);
+                if (batFiles.Length > 0)
                 {
-                    Debug.WriteLine($"[LocalGameManager] No .bat file found in extracted game");
-                    // Try to open the extracted folder instead
-                    Process.Start(new ProcessStartInfo
+                    gameExe = batFiles[0];
+                    Debug.WriteLine($"[LocalGameManager] Found .bat launcher: {gameExe}");
+                }
+                else
+                {
+                    // No .bat file, try to find .exe
+                    var exeFiles = Directory.GetFiles(extractPath, "*.exe", SearchOption.AllDirectories);
+                    if (exeFiles.Length > 0)
                     {
-                        FileName = extractPath,
-                        UseShellExecute = true
-                    });
-                    return true;
+                        gameExe = exeFiles[0];
+                        Debug.WriteLine($"[LocalGameManager] Found .exe file: {gameExe}");
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"[LocalGameManager] No executable found (.bat or .exe)");
+                        return false;
+                    }
                 }
 
-                var gameExe = batFiles[0];
-                Debug.WriteLine($"[LocalGameManager] Launching game executable: {gameExe}");
+                Debug.WriteLine($"[LocalGameManager] Launching game: {gameExe}");
 
                 var processInfo = new ProcessStartInfo
                 {

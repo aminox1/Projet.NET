@@ -69,10 +69,28 @@ namespace Gauniv.WebServer.Controllers
         // POST: Admin/CreateGame
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(500_000_000)] // 500 MB max file size
         public async Task<IActionResult> CreateGame(CreateGameDto model, IFormFile? payload)
         {
             if (!ModelState.IsValid)
             {
+                ViewBag.Categories = await appDbContext.Categories.ToListAsync();
+                return View(model);
+            }
+
+            // Validate file upload
+            if (payload == null || payload.Length == 0)
+            {
+                ModelState.AddModelError("", "Please upload a game file (ZIP format)");
+                ViewBag.Categories = await appDbContext.Categories.ToListAsync();
+                return View(model);
+            }
+
+            // Validate file extension
+            var local_fileExtension = Path.GetExtension(payload.FileName).ToLower();
+            if (local_fileExtension != ".zip")
+            {
+                ModelState.AddModelError("", "Only ZIP files are allowed");
                 ViewBag.Categories = await appDbContext.Categories.ToListAsync();
                 return View(model);
             }
@@ -84,23 +102,25 @@ namespace Gauniv.WebServer.Controllers
                 Price = model.Price
             };
 
-            // Handle file upload
-            if (payload != null && payload.Length > 0)
+            // Handle file upload - stored outside database as per professor's requirements
+            var local_uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "games");
+            Directory.CreateDirectory(local_uploadsFolder);
+            
+            // Use sanitized game name for better organization
+            var local_sanitizedName = string.Join("_", model.Name.Split(Path.GetInvalidFileNameChars()));
+            var local_uniqueFileName = $"{local_sanitizedName}_{Guid.NewGuid().ToString().Substring(0, 8)}.zip";
+            var local_filePath = Path.Combine(local_uploadsFolder, local_uniqueFileName);
+            
+            // Stream the file to disk (no full memory load - per professor's requirements)
+            using (var local_fileStream = new FileStream(local_filePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true))
             {
-                var local_uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "games");
-                Directory.CreateDirectory(local_uploadsFolder);
-                
-                var local_uniqueFileName = $"{Guid.NewGuid()}_{payload.FileName}";
-                var local_filePath = Path.Combine(local_uploadsFolder, local_uniqueFileName);
-                
-                using (var local_fileStream = new FileStream(local_filePath, FileMode.Create))
-                {
-                    await payload.CopyToAsync(local_fileStream);
-                }
-                
-                local_game.PayloadPath = local_filePath;
-                local_game.Size = payload.Length;
+                await payload.CopyToAsync(local_fileStream);
             }
+            
+            local_game.PayloadPath = local_filePath;
+            local_game.Size = payload.Length;
+            
+            Console.WriteLine($"[AdminController] Game file uploaded: {local_filePath} ({payload.Length} bytes)");
 
             // Add categories
             if (model.CategoryIds != null && model.CategoryIds.Any())
@@ -114,6 +134,7 @@ namespace Gauniv.WebServer.Controllers
             appDbContext.Games.Add(local_game);
             await appDbContext.SaveChangesAsync();
 
+            TempData["SuccessMessage"] = $"Game '{model.Name}' created successfully!";
             return RedirectToAction(nameof(Games));
         }
 

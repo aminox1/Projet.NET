@@ -47,7 +47,7 @@ namespace Gauniv.Client.ViewModel
                 {
                     game.IsDownloaded = localGameManager.IsGameDownloaded(game.Id);
                     game.IsRunning = localGameManager.IsGameRunning(game.Id);
-                    Debug.WriteLine($"[MyGamesViewModel] Game: {game.Name}, Downloaded: {game.IsDownloaded}");
+                    Debug.WriteLine($"[MyGamesViewModel] Game: {game.Name}, Downloaded: {game.IsDownloaded}, Running: {game.IsRunning}");
                 }
                 
                 MyGames.Clear();
@@ -128,7 +128,12 @@ namespace Gauniv.Client.ViewModel
                 var success = localGameManager.LaunchGame(game.Id);
                 if (success)
                 {
-                    game.IsRunning = true;
+                    // Find the game in the collection and update its IsRunning property
+                    var gameInCollection = MyGames.FirstOrDefault(g => g.Id == game.Id);
+                    if (gameInCollection != null)
+                    {
+                        gameInCollection.IsRunning = true;
+                    }
                     await Application.Current.MainPage.DisplayAlert("Game Launched", $"{game.Name} is now running", "OK");
                 }
                 else
@@ -150,7 +155,13 @@ namespace Gauniv.Client.ViewModel
             try
             {
                 localGameManager.StopGame(game.Id);
-                game.IsRunning = false;
+                
+                // Find the game in the collection and update its IsRunning property
+                var gameInCollection = MyGames.FirstOrDefault(g => g.Id == game.Id);
+                if (gameInCollection != null)
+                {
+                    gameInCollection.IsRunning = false;
+                }
                 await Application.Current.MainPage.DisplayAlert("Game Stopped", $"{game.Name} has been stopped", "OK");
             }
             catch (Exception ex)
