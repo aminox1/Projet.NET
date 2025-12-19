@@ -32,74 +32,103 @@ Please respect the team's standards for any future contribution
              xmlns:vm="clr-namespace:Gauniv.Client.ViewModel"
              x:Class="Gauniv.Client.Pages.Profile"
              Title="Profile"
-             x:DataType="vm:ProfileViewModel">
+             x:DataType="vm:ProfileViewModel"
+             BackgroundColor="#1B2838">
     
     <ScrollView Padding="20">
         <VerticalStackLayout Spacing="20">
-            <Label Text="User Profile" 
-                   FontSize="28" 
+            <Label Text="👤 USER PROFILE" 
+                   FontSize="24" 
                    FontAttributes="Bold"
+                   TextColor="White"
                    HorizontalOptions="Center"/>
             
             <Frame IsVisible="{Binding IsLoggedIn, Converter={StaticResource InvertedBoolConverter}}"
-                   Padding="20"
-                   CornerRadius="10"
-                   HasShadow="True">
+                   Padding="25"
+                   CornerRadius="4"
+                   BorderColor="#2A475E"
+                   BackgroundColor="#16202D"
+                   HasShadow="False">
                 <VerticalStackLayout Spacing="15">
-                    <Label Text="Login to purchase and download games" 
+                    <Label Text=" Sign in to your account" 
                            FontSize="16"
-                           HorizontalOptions="Center"/>
+                           TextColor="#66C0F4"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           Margin="0,0,0,10"/>
                     
-                    <Entry Placeholder="Email"
+                    <Entry Placeholder="Email address"
+                           PlaceholderColor="#8F98A0"
                            Text="{Binding Email}"
+                           TextColor="White"
+                           BackgroundColor="#2A475E"
                            Keyboard="Email"/>
                     
                     <Entry Placeholder="Password"
+                           PlaceholderColor="#8F98A0"
                            Text="{Binding Password}"
+                           TextColor="White"
+                           BackgroundColor="#2A475E"
                            IsPassword="True"/>
                     
-                    <Button Text="Login" 
+                    <Button Text=" LOGIN" 
                             Command="{Binding LoginCommand}"
-                            BackgroundColor="{StaticResource Primary}"
+                            BackgroundColor="#417A9B"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            CornerRadius="3"
+                            Padding="0,12"
                             IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"/>
                     
                     <ActivityIndicator IsRunning="{Binding IsLoading}"
-                                     IsVisible="{Binding IsLoading}"/>
+                                     IsVisible="{Binding IsLoading}"
+                                     Color="#66C0F4"/>
                 </VerticalStackLayout>
             </Frame>
             
             <Frame IsVisible="{Binding IsLoggedIn}"
-                   Padding="20"
-                   CornerRadius="10"
-                   HasShadow="True">
+                   Padding="25"
+                   CornerRadius="4"
+                   BorderColor="#2A475E"
+                   BackgroundColor="#16202D"
+                   HasShadow="False">
                 <VerticalStackLayout Spacing="15">
-                    <Label Text="✓ Logged In" 
-                           FontSize="20"
+                    <Label Text="✓ CONNECTED" 
+                           FontSize="18"
                            FontAttributes="Bold"
-                           TextColor="Green"
+                           TextColor="#5C9F3F"
                            HorizontalOptions="Center"/>
                     
                     <Label Text="{Binding Email}" 
-                           FontSize="16"
+                           FontSize="14"
+                           TextColor="#66C0F4"
                            HorizontalOptions="Center"/>
                     
-                    <Button Text="Logout" 
+                    <Button Text=" LOGOUT" 
                             Command="{Binding LogoutCommand}"
-                            BackgroundColor="DarkRed"/>
+                            BackgroundColor="#C23030"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            CornerRadius="3"
+                            Padding="0,12"/>
                 </VerticalStackLayout>
             </Frame>
             
             <Label Text="{Binding StatusMessage}" 
-                   FontSize="14"
-                   TextColor="Orange"
+                   FontSize="13"
+                   TextColor="#FFA500"
                    HorizontalOptions="Center"
                    IsVisible="{Binding StatusMessage, Converter={StaticResource IsNotNullConverter}}"/>
             
-            <Frame Padding="15" CornerRadius="10" BackgroundColor="LightYellow">
-                <VerticalStackLayout Spacing="5">
-                    <Label Text="Test Accounts:" FontAttributes="Bold"/>
-                    <Label Text="• test@test.com / password" FontSize="12"/>
-                    <Label Text="• admin@gauniv.com / admin123 (web only)" FontSize="12"/>
+            <Frame Padding="15" 
+                   CornerRadius="4" 
+                   BorderColor="#66C0F4"
+                   BackgroundColor="#2A475E">
+                <VerticalStackLayout Spacing="8">
+                    
+                    
                 </VerticalStackLayout>
             </Frame>
         </VerticalStackLayout>

@@ -34,89 +34,99 @@ Please respect the team's standards for any future contribution
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Gauniv.Client.Pages.Index"
              Title="All Games"
-             x:DataType="vm:IndexViewModel">
+             x:DataType="vm:IndexViewModel"
+             BackgroundColor="#1B2838">
     
-    <Grid RowDefinitions="Auto,Auto,*" Padding="10">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="15">
         <SearchBar Grid.Row="0"
-                   Placeholder="Search games by name or description..."
+                   Placeholder="Search your library..."
                    Text="{Binding SearchText}"
-                   Margin="0,0,0,10"/>
+                   PlaceholderColor="#8F98A0"
+                   TextColor="White"
+                   BackgroundColor="#2A475E"
+                   Margin="0,0,0,15"/>
         
         <Border Grid.Row="1" 
                 StrokeThickness="1" 
-                Stroke="#E0E0E0" 
-                Padding="10"
-                BackgroundColor="#F5F5F5"
-                StrokeShape="RoundRectangle 10"
-                Margin="0,0,0,10">
-            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*,*" RowSpacing="10" ColumnSpacing="10">
+                Stroke="#2A475E" 
+                Padding="15"
+                BackgroundColor="#16202D"
+                StrokeShape="RoundRectangle 8"
+                Margin="0,0,0,15">
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*,*" RowSpacing="12" ColumnSpacing="12">
                 
-                <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="3">
-                    <Label Text=" Category" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
+                <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="5">
+                    <Label Text="CATEGORY" FontSize="11" FontAttributes="Bold" TextColor="#66C0F4"/>
                     <Picker ItemsSource="{Binding Categories}"
                             SelectedItem="{Binding SelectedCategory}"
                             ItemDisplayBinding="{Binding Name}"
                             FontSize="13"
-                            BackgroundColor="White"/>
+                            TextColor="White"
+                            BackgroundColor="#2A475E"/>
                 </VerticalStackLayout>
                 
-                <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="3">
-                    <Label Text=" Min Price" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
+                <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="5">
+                    <Label Text="MIN PRICE" FontSize="11" FontAttributes="Bold" TextColor="#66C0F4"/>
                     <Entry Text="{Binding MinPrice}" 
                            Placeholder="0.00" 
+                           PlaceholderColor="#8F98A0"
                            Keyboard="Numeric"
                            FontSize="13"
-                           BackgroundColor="White"/>
+                           TextColor="White"
+                           BackgroundColor="#2A475E"/>
                 </VerticalStackLayout>
                 
-                <VerticalStackLayout Grid.Row="0" Grid.Column="2" Spacing="3">
-                    <Label Text=" Max Price" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
+                <VerticalStackLayout Grid.Row="0" Grid.Column="2" Spacing="5">
+                    <Label Text=" MAX PRICE" FontSize="11" FontAttributes="Bold" TextColor="#66C0F4"/>
                     <Entry Text="{Binding MaxPrice}" 
                            Placeholder="999.99" 
+                           PlaceholderColor="#8F98A0"
                            Keyboard="Numeric"
                            FontSize="13"
-                           BackgroundColor="White"/>
+                           TextColor="White"
+                           BackgroundColor="#2A475E"/>
                 </VerticalStackLayout>
                 
-                <VerticalStackLayout Grid.Row="0" Grid.Column="3" Spacing="3">
-                    <Label Text=" " FontSize="12"/>
-                    <Button Text=" Clear Filters"
+                <VerticalStackLayout Grid.Row="0" Grid.Column="3" Spacing="5">
+                    <Label Text=" " FontSize="11"/>
+                    <Button Text=" CLEAR"
                             Command="{Binding ClearFiltersCommand}"
-                            BackgroundColor="#6C757D"
+                            BackgroundColor="#417A9B"
                             TextColor="White"
                             FontSize="12"
-                            CornerRadius="5"/>
+                            FontAttributes="Bold"
+                            CornerRadius="3"/>
                 </VerticalStackLayout>
                 
-                <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="20">
-                    <Border Padding="10,5" 
-                            BackgroundColor="White"
+                <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="15">
+                    <Border Padding="12,6" 
+                            BackgroundColor="#2A475E"
                             StrokeThickness="1"
-                            Stroke="#28A745"
-                            StrokeShape="RoundRectangle 5">
-                        <HorizontalStackLayout Spacing="5">
+                            Stroke="#5C9F3F"
+                            StrokeShape="RoundRectangle 3">
+                        <HorizontalStackLayout Spacing="8">
                             <CheckBox IsChecked="{Binding ShowOwnedOnly}" 
-                                      Color="#28A745"/>
-                            <Label Text=" Show Only Owned Games" 
+                                      Color="#5C9F3F"/>
+                            <Label Text=" OWNED GAMES" 
                                    VerticalOptions="Center"
-                                   TextColor="#28A745"
-                                   FontSize="13"
+                                   TextColor="#5C9F3F"
+                                   FontSize="12"
                                    FontAttributes="Bold"/>
                         </HorizontalStackLayout>
                     </Border>
                     
-                    <Border Padding="10,5" 
-                            BackgroundColor="White"
+                    <Border Padding="12,6" 
+                            BackgroundColor="#2A475E"
                             StrokeThickness="1"
-                            Stroke="#FF6B35"
-                            StrokeShape="RoundRectangle 5">
-                        <HorizontalStackLayout Spacing="5">
+                            Stroke="#FFA500"
+                            StrokeShape="RoundRectangle 3">
+                        <HorizontalStackLayout Spacing="8">
                             <CheckBox IsChecked="{Binding ShowNotOwnedOnly}" 
-                                      Color="#FF6B35"/>
-                            <Label Text=" Show Only Not Owned" 
+                                      Color="#FFA500"/>
+                            <Label Text=" NOT OWNED" 
                                    VerticalOptions="Center"
-                                   TextColor="#FF6B35"
-                                   FontSize="13"
+                                   TextColor="#FFA500"
+                                   FontSize="12"
                                    FontAttributes="Bold"/>
                         </HorizontalStackLayout>
                     </Border>
@@ -146,40 +156,42 @@ Please respect the team's standards for any future contribution
                 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:GameDto">
-                        <Frame Margin="0,5" 
-                               Padding="15" 
-                               BorderColor="LightGray"
-                               CornerRadius="10"
-                               HasShadow="True">
+                        <Frame Margin="0,8" 
+                               Padding="0" 
+                               BorderColor="#2A475E"
+                               CornerRadius="4"
+                               BackgroundColor="#16202D"
+                               HasShadow="False">
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer 
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:IndexViewModel}}, Path=GameSelectedCommand}"
                                     CommandParameter="{Binding .}"/>
                             </Frame.GestureRecognizers>
                             
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" Padding="15">
                             
                                 <Label Grid.Row="0" Grid.Column="0"
                                        Text="{Binding Name}"
-                                       FontSize="20"
-                                       FontAttributes="Bold"/>
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="White"/>
                                 
                              
                                 <Label Grid.Row="0" Grid.Column="1"
                                        Text="{Binding Price, StringFormat='${0:F2}'}"
-                                       FontSize="18"
+                                       FontSize="20"
                                        FontAttributes="Bold"
-                                       TextColor="Green"
+                                       TextColor="#BEDB39"
                                        VerticalOptions="Center"/>
                                 
                                 
                                 <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                        Text="{Binding Description}"
-                                       FontSize="14"
-                                       TextColor="Gray"
+                                       FontSize="13"
+                                       TextColor="#8F98A0"
                                        MaxLines="2"
                                        LineBreakMode="TailTruncation"
-                                       Margin="0,5,0,0"/>
+                                       Margin="0,8,0,0"/>
                                 
                                
                                 <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"

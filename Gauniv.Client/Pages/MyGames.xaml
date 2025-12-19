@@ -34,72 +34,74 @@ Please respect the team's standards for any future contribution
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Gauniv.Client.Pages.MyGames"
              Title="My Games"
-             x:DataType="vm:MyGamesViewModel">
+             x:DataType="vm:MyGamesViewModel"
+             BackgroundColor="#1B2838">
     
     <RefreshView IsRefreshing="{Binding IsLoading}"
                  Command="{Binding LoadMyGamesCommand}"
-                 Margin="10">
+                 Margin="15">
         <CollectionView ItemsSource="{Binding MyGames}"
                        SelectionMode="None">
             <CollectionView.EmptyView>
                 <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
-                    <Label Text="You don't own any games yet" 
-                           FontSize="18" 
+                    <Label Text=" Your library is empty" 
+                           FontSize="20" 
+                           FontAttributes="Bold"
                            HorizontalTextAlignment="Center"
-                           TextColor="Gray"/>
-                    <Label Text="Go to the Games tab to purchase games" 
+                           TextColor="#8F98A0"/>
+                    <Label Text="Visit the Store to purchase games" 
                            FontSize="14" 
                            HorizontalTextAlignment="Center"
-                           TextColor="Gray"
+                           TextColor="#66C0F4"
                            Margin="0,10,0,0"/>
                 </StackLayout>
             </CollectionView.EmptyView>
             
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:GameDto">
-                    <Frame Margin="0,5" 
-                           Padding="15" 
-                           BorderColor="LightGray"
-                           CornerRadius="10"
-                           HasShadow="True">
-                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                    <Frame Margin="0,8" 
+                           Padding="0" 
+                           BorderColor="#2A475E"
+                           CornerRadius="4"
+                           BackgroundColor="#16202D"
+                           HasShadow="False">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Padding="15">
                             <Label Grid.Row="0" Grid.Column="0"
                                    Text="{Binding Name}"
-                                   FontSize="20"
-                                   FontAttributes="Bold"/>
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="White"/>
                             
-                            <!-- Status Badge -->
                             <Label Grid.Row="0" Grid.Column="1"
-                                   Text="{Binding IsRunning, Converter={StaticResource BoolToTextConverter}, ConverterParameter='● Running|'}"
-                                   FontSize="14"
-                                   TextColor="Green"
+                                   Text="{Binding IsRunning, Converter={StaticResource BoolToTextConverter}, ConverterParameter='● RUNNING|'}"
+                                   FontSize="13"
+                                   TextColor="#5C9F3F"
                                    FontAttributes="Bold"
                                    VerticalOptions="Center"
                                    IsVisible="{Binding IsRunning}"/>
                             
-                            <!-- Description -->
                             <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                    Text="{Binding Description}"
-                                   FontSize="14"
-                                   TextColor="Gray"
+                                   FontSize="13"
+                                   TextColor="#8F98A0"
                                    MaxLines="2"
                                    LineBreakMode="TailTruncation"
-                                   Margin="0,5,0,0"/>
+                                   Margin="0,8,0,0"/>
                             
                             <Label Grid.Row="2" Grid.Column="0"
-                                   Text="{Binding Size, StringFormat='Size: {0:N0} bytes'}"
-                                   FontSize="12"
-                                   TextColor="Gray"
-                                   Margin="0,5,0,0"
+                                   Text="{Binding Size, StringFormat=' {0:N0} bytes'}"
+                                   FontSize="11"
+                                   TextColor="#66C0F4"
+                                   Margin="0,8,0,0"
                                    IsVisible="{Binding Size, Converter={StaticResource IsNotNullConverter}}"/>
                             
                             <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
-                                   FontSize="12"
-                                   Margin="0,5,0,0">
+                                   FontSize="11"
+                                   Margin="0,8,0,0">
                                 <Label.FormattedText>
                                     <FormattedString>
-                                        <Span Text="Status: "/>
-                                        <Span Text="{Binding IsDownloaded, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Downloaded|Not Downloaded'}"
+                                        <Span Text=" " TextColor="#66C0F4"/>
+                                        <Span Text="{Binding IsDownloaded, Converter={StaticResource BoolToTextConverter}, ConverterParameter='INSTALLED|NOT INSTALLED'}"
                                               FontAttributes="Bold"
                                               TextColor="{Binding IsDownloaded, Converter={StaticResource BoolToColorConverter}}"/>
                                     </FormattedString>
@@ -110,47 +112,67 @@ Please respect the team's standards for any future contribution
                                        Wrap="Wrap"
                                        JustifyContent="Start"
                                        AlignItems="Start"
-                                       Margin="0,10,0,0">
+                                       Margin="0,12,0,0">
                                 
-                                <Button Text="Download"
+                                <Button Text="DOWNLOAD"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=DownloadGameCommand}"
                                         CommandParameter="{Binding .}"
-                                        BackgroundColor="Green"
+                                        BackgroundColor="#5C9F3F"
                                         TextColor="White"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        CornerRadius="3"
+                                        Padding="15,8"
                                         IsVisible="{Binding IsDownloaded, Converter={StaticResource InvertedBoolConverter}}"
-                                        Margin="0,0,5,5"/>
+                                        Margin="0,0,8,8"/>
                                 
-                                <Button Text="Launch"
+                                <Button Text="▶ PLAY"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=LaunchGameCommand}"
                                         CommandParameter="{Binding .}"
-                                        BackgroundColor="Blue"
+                                        BackgroundColor="#417A9B"
                                         TextColor="White"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        CornerRadius="3"
+                                        Padding="15,8"
                                         IsVisible="{Binding IsDownloaded}"
                                         IsEnabled="{Binding IsRunning, Converter={StaticResource InvertedBoolConverter}}"
-                                        Margin="0,0,5,5"/>
+                                        Margin="0,0,8,8"/>
                                 
-                                <Button Text="Stop"
+                                <Button Text="■ STOP"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=StopGameCommand}"
                                         CommandParameter="{Binding .}"
-                                        BackgroundColor="Orange"
+                                        BackgroundColor="#FFA500"
                                         TextColor="White"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        CornerRadius="3"
+                                        Padding="15,8"
                                         IsVisible="{Binding IsRunning}"
-                                        Margin="0,0,5,5"/>
+                                        Margin="0,0,8,8"/>
                                 
-                                <Button Text="Delete"
+                                <Button Text=" DELETE"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=DeleteGameCommand}"
                                         CommandParameter="{Binding .}"
-                                        BackgroundColor="Red"
+                                        BackgroundColor="#C23030"
                                         TextColor="White"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        CornerRadius="3"
+                                        Padding="15,8"
                                         IsVisible="{Binding IsDownloaded}"
-                                        Margin="0,0,5,5"/>
+                                        Margin="0,0,8,8"/>
                                 
-                                <Button Text="Details"
+                                <Button Text=" DETAILS"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=GameSelectedCommand}"
                                         CommandParameter="{Binding .}"
-                                        BackgroundColor="Gray"
+                                        BackgroundColor="#6C757D"
                                         TextColor="White"
-                                        Margin="0,0,5,5"/>
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        CornerRadius="3"
+                                        Padding="15,8"
+                                        Margin="0,0,8,8"/>
                             </FlexLayout>
                         </Grid>
                     </Frame>

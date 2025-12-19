@@ -44,7 +44,6 @@ public partial class MyGames : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
-		// Reload games when page appears
 		viewModel?.LoadMyGamesCommand.Execute(null);
 	}
 }
