@@ -144,6 +144,9 @@ namespace Gauniv.Client.ViewModel
                 filtered = filtered.Where(g => !g.IsOwned);
             }
             
+            // Sort by name (alphabetically)
+            filtered = filtered.OrderBy(g => g.Name);
+            
             Games.Clear();
             foreach (var game in filtered)
             {
