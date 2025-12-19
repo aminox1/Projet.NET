@@ -37,13 +37,11 @@ Please respect the team's standards for any future contribution
              x:DataType="vm:IndexViewModel">
     
     <Grid RowDefinitions="Auto,Auto,*" Padding="10">
-        <!-- Search Bar -->
         <SearchBar Grid.Row="0"
                    Placeholder="Search games by name or description..."
                    Text="{Binding SearchText}"
                    Margin="0,0,0,10"/>
         
-        <!-- Filters Section -->
         <Border Grid.Row="1" 
                 StrokeThickness="1" 
                 Stroke="#E0E0E0" 
@@ -53,9 +51,8 @@ Please respect the team's standards for any future contribution
                 Margin="0,0,0,10">
             <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*,*" RowSpacing="10" ColumnSpacing="10">
                 
-                <!-- Category Filter -->
                 <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="3">
-                    <Label Text="📂 Category" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
+                    <Label Text=" Category" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
                     <Picker ItemsSource="{Binding Categories}"
                             SelectedItem="{Binding SelectedCategory}"
                             ItemDisplayBinding="{Binding Name}"
@@ -63,9 +60,8 @@ Please respect the team's standards for any future contribution
                             BackgroundColor="White"/>
                 </VerticalStackLayout>
                 
-                <!-- Min Price -->
                 <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="3">
-                    <Label Text="💰 Min Price" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
+                    <Label Text=" Min Price" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
                     <Entry Text="{Binding MinPrice}" 
                            Placeholder="0.00" 
                            Keyboard="Numeric"
@@ -73,9 +69,8 @@ Please respect the team's standards for any future contribution
                            BackgroundColor="White"/>
                 </VerticalStackLayout>
                 
-                <!-- Max Price -->
                 <VerticalStackLayout Grid.Row="0" Grid.Column="2" Spacing="3">
-                    <Label Text="💰 Max Price" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
+                    <Label Text=" Max Price" FontSize="12" FontAttributes="Bold" TextColor="#666"/>
                     <Entry Text="{Binding MaxPrice}" 
                            Placeholder="999.99" 
                            Keyboard="Numeric"
@@ -83,10 +78,9 @@ Please respect the team's standards for any future contribution
                            BackgroundColor="White"/>
                 </VerticalStackLayout>
                 
-                <!-- Clear Button -->
                 <VerticalStackLayout Grid.Row="0" Grid.Column="3" Spacing="3">
                     <Label Text=" " FontSize="12"/>
-                    <Button Text="🗑️ Clear Filters"
+                    <Button Text=" Clear Filters"
                             Command="{Binding ClearFiltersCommand}"
                             BackgroundColor="#6C757D"
                             TextColor="White"
@@ -94,7 +88,6 @@ Please respect the team's standards for any future contribution
                             CornerRadius="5"/>
                 </VerticalStackLayout>
                 
-                <!-- Ownership Filters -->
                 <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="20">
                     <Border Padding="10,5" 
                             BackgroundColor="White"
@@ -104,7 +97,7 @@ Please respect the team's standards for any future contribution
                         <HorizontalStackLayout Spacing="5">
                             <CheckBox IsChecked="{Binding ShowOwnedOnly}" 
                                       Color="#28A745"/>
-                            <Label Text="✓ Show Only Owned Games" 
+                            <Label Text=" Show Only Owned Games" 
                                    VerticalOptions="Center"
                                    TextColor="#28A745"
                                    FontSize="13"
@@ -120,7 +113,7 @@ Please respect the team's standards for any future contribution
                         <HorizontalStackLayout Spacing="5">
                             <CheckBox IsChecked="{Binding ShowNotOwnedOnly}" 
                                       Color="#FF6B35"/>
-                            <Label Text="🛒 Show Only Not Owned" 
+                            <Label Text=" Show Only Not Owned" 
                                    VerticalOptions="Center"
                                    TextColor="#FF6B35"
                                    FontSize="13"
@@ -132,7 +125,6 @@ Please respect the team's standards for any future contribution
             </Grid>
         </Border>
 
-        <!-- Games List -->
         <RefreshView Grid.Row="2" 
                      IsRefreshing="{Binding IsLoading}"
                      Command="{Binding LoadGamesCommand}">

@@ -41,7 +41,6 @@ Please respect the team's standards for any future contribution
                    FontAttributes="Bold"
                    HorizontalOptions="Center"/>
             
-            <!-- Login Form -->
             <Frame IsVisible="{Binding IsLoggedIn, Converter={StaticResource InvertedBoolConverter}}"
                    Padding="20"
                    CornerRadius="10"
@@ -69,7 +68,6 @@ Please respect the team's standards for any future contribution
                 </VerticalStackLayout>
             </Frame>
             
-            <!-- Logged In State -->
             <Frame IsVisible="{Binding IsLoggedIn}"
                    Padding="20"
                    CornerRadius="10"
@@ -91,14 +89,12 @@ Please respect the team's standards for any future contribution
                 </VerticalStackLayout>
             </Frame>
             
-            <!-- Status Message -->
             <Label Text="{Binding StatusMessage}" 
                    FontSize="14"
                    TextColor="Orange"
                    HorizontalOptions="Center"
                    IsVisible="{Binding StatusMessage, Converter={StaticResource IsNotNullConverter}}"/>
             
-            <!-- Quick Test Accounts -->
             <Frame Padding="15" CornerRadius="10" BackgroundColor="LightYellow">
                 <VerticalStackLayout Spacing="5">
                     <Label Text="Test Accounts:" FontAttributes="Bold"/>

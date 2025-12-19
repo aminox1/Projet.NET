@@ -63,7 +63,6 @@ Please respect the team's standards for any future contribution
                            CornerRadius="10"
                            HasShadow="True">
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-                            <!-- Game Name -->
                             <Label Grid.Row="0" Grid.Column="0"
                                    Text="{Binding Name}"
                                    FontSize="20"
@@ -87,7 +86,6 @@ Please respect the team's standards for any future contribution
                                    LineBreakMode="TailTruncation"
                                    Margin="0,5,0,0"/>
                             
-                            <!-- Size -->
                             <Label Grid.Row="2" Grid.Column="0"
                                    Text="{Binding Size, StringFormat='Size: {0:N0} bytes'}"
                                    FontSize="12"
@@ -95,7 +93,6 @@ Please respect the team's standards for any future contribution
                                    Margin="0,5,0,0"
                                    IsVisible="{Binding Size, Converter={StaticResource IsNotNullConverter}}"/>
                             
-                            <!-- Download Status -->
                             <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
                                    FontSize="12"
                                    Margin="0,5,0,0">
@@ -109,14 +106,12 @@ Please respect the team's standards for any future contribution
                                 </Label.FormattedText>
                             </Label>
                             
-                            <!-- Action Buttons -->
                             <FlexLayout Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
                                        Wrap="Wrap"
                                        JustifyContent="Start"
                                        AlignItems="Start"
                                        Margin="0,10,0,0">
                                 
-                                <!-- Download Button -->
                                 <Button Text="Download"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=DownloadGameCommand}"
                                         CommandParameter="{Binding .}"
@@ -125,7 +120,6 @@ Please respect the team's standards for any future contribution
                                         IsVisible="{Binding IsDownloaded, Converter={StaticResource InvertedBoolConverter}}"
                                         Margin="0,0,5,5"/>
                                 
-                                <!-- Launch Button -->
                                 <Button Text="Launch"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=LaunchGameCommand}"
                                         CommandParameter="{Binding .}"
@@ -135,7 +129,6 @@ Please respect the team's standards for any future contribution
                                         IsEnabled="{Binding IsRunning, Converter={StaticResource InvertedBoolConverter}}"
                                         Margin="0,0,5,5"/>
                                 
-                                <!-- Stop Button -->
                                 <Button Text="Stop"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=StopGameCommand}"
                                         CommandParameter="{Binding .}"
@@ -144,7 +137,6 @@ Please respect the team's standards for any future contribution
                                         IsVisible="{Binding IsRunning}"
                                         Margin="0,0,5,5"/>
                                 
-                                <!-- Delete Button -->
                                 <Button Text="Delete"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=DeleteGameCommand}"
                                         CommandParameter="{Binding .}"
@@ -153,7 +145,6 @@ Please respect the team's standards for any future contribution
                                         IsVisible="{Binding IsDownloaded}"
                                         Margin="0,0,5,5"/>
                                 
-                                <!-- View Details Button -->
                                 <Button Text="Details"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=GameSelectedCommand}"
                                         CommandParameter="{Binding .}"

@@ -117,7 +117,6 @@ namespace Gauniv.Client.ViewModel
         {
             var filtered = AllGames.AsEnumerable();
             
-            // Filter by search text
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 filtered = filtered.Where(g => 
@@ -125,16 +124,13 @@ namespace Gauniv.Client.ViewModel
                     g.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
             }
             
-            // Filter by category
             if (SelectedCategory != null && SelectedCategory.Id != 0)
             {
                 filtered = filtered.Where(g => g.Categories.Any(c => c.Id == SelectedCategory.Id));
             }
             
-            // Filter by price range
             filtered = filtered.Where(g => g.Price >= MinPrice && g.Price <= MaxPrice);
             
-            // Filter by ownership
             if (ShowOwnedOnly)
             {
                 filtered = filtered.Where(g => g.IsOwned);
@@ -144,7 +140,6 @@ namespace Gauniv.Client.ViewModel
                 filtered = filtered.Where(g => !g.IsOwned);
             }
             
-            // Sort by name (alphabetically)
             filtered = filtered.OrderBy(g => g.Name);
             
             Games.Clear();

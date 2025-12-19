@@ -128,7 +128,6 @@ namespace Gauniv.Client.ViewModel
                 var success = localGameManager.LaunchGame(game.Id);
                 if (success)
                 {
-                    // Find the game in the collection and update its IsRunning property
                     var gameInCollection = MyGames.FirstOrDefault(g => g.Id == game.Id);
                     if (gameInCollection != null)
                     {
@@ -156,7 +155,6 @@ namespace Gauniv.Client.ViewModel
             {
                 localGameManager.StopGame(game.Id);
                 
-                // Find the game in the collection and update its IsRunning property
                 var gameInCollection = MyGames.FirstOrDefault(g => g.Id == game.Id);
                 if (gameInCollection != null)
                 {
