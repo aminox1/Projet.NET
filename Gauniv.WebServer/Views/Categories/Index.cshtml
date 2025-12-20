@@ -1,0 +1,138 @@
+@model Gauniv.WebServer.ViewModels.CategoryListViewModel
+@using System.Net
+@{
+    ViewData["Title"] = "Catégories";
+    var totalPages = Model.TotalPages;
+    var catsQuery = string.Join(',', Model.SelectedCategoryIds ?? new List<int>());
+}
+
+<style>
+    .steam-card { border-radius: 6px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.08); transition: transform .12s ease, box-shadow .12s ease; }
+    .steam-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+    .steam-card .banner { height: 140px; background:#111; display:flex; align-items:center; justify-content:center; }
+    .steam-card .banner img { width:100%; height:100%; object-fit:cover; display:block; }
+    .steam-card .card-body { padding: 12px; }
+    .steam-card .title { font-weight:700; font-size:1rem; margin-bottom:6px; }
+    .steam-card .meta { font-size:.85rem; color:#6c757d; }
+    .categories-filters .card-body { padding: 10px; }
+    .pagination.steam { justify-content:center; gap:8px; }
+    .page-link.steam { border-radius:6px; padding:8px 12px; }
+</style>
+
+<div class="container mt-3">
+    <div class="row mb-3 align-items-center">
+        <div class="col">
+            <h1 class="display-5">Catégories</h1>
+            <p class="lead text-muted">Explore les catégories disponibles.</p>
+        </div>
+        <div class="col-auto text-end">
+            <div class="text-muted">@Model.TotalItems catégories</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <aside class="col-12 col-md-3 mb-3">
+            <div class="card categories-filters">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">Filtres</h5>
+                    <form method="get" asp-action="Index" asp-controller="Categories">
+                        <input type="hidden" name="page" value="1" />
+                        <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+                        <div class="mb-2">
+                            <label class="form-label small">Recherche</label>
+                            <input type="search" name="search" class="form-control form-control-sm" value="@Model.Search" placeholder="Recherche par nom" />
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small">Sélection</label>
+                            <div style="max-height:260px; overflow:auto; padding-right:6px;">
+                                @foreach (var c in Model.AllCategories)
+                                {
+                                    var isChecked = Model.SelectedCategoryIds?.Contains(c.Id) == true;
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="categories" value="@c.Id" id="cat_@c.Id" @(isChecked ? "checked" : "") />
+                                        <label class="form-check-label small" for="cat_@c.Id">@c.Name <span class="text-muted">(@c.GamesCount)</span></label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-primary btn-sm w-100" type="submit">Appliquer</button>
+                            <a class="btn btn-outline-secondary btn-sm w-100" href="@Url.Action("Index", "Categories")">Réinitialiser</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <section class="col-12 col-md-9">
+            @if (!Model.Items.Any())
+            {
+                <div class="alert alert-light">Aucune catégorie trouvée.</div>
+            }
+            else
+            {
+                <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+                    @foreach (var cat in Model.Items)
+                    {
+                        <div class="col">
+                            <div class="steam-card card h-100">
+                                <a href="@Url.Action("Index","Home", new { category = cat.Name })" class="text-decoration-none text-dark d-block">
+                                    <div class="banner">
+                                        @if (cat.HasImage)
+                                        {
+                                            <img src="@Url.Action("GetImage","Categories", new { id = cat.Id })" alt="@cat.Name" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-100 text-white d-flex align-items-center justify-content-center">@cat.Name</div>
+                                        }
+                                    </div>
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="title">@cat.Name</div>
+                                        <div class="meta">@cat.GamesCount jeux</div>
+                                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-secondary">Voir</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <nav class="mt-4" aria-label="Pagination categories">
+                    <ul class="pagination steam">
+                        <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                            <a class="page-link steam" href="@Url.Action("Index", "Categories", new { page = 1, pageSize = Model.PageSize, search = Model.Search, categories = catsQuery })">&laquo; First</a>
+                        </li>
+                        <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                            <a class="page-link steam" href="@Url.Action("Index", "Categories", new { page = Model.Page - 1, pageSize = Model.PageSize, search = Model.Search, categories = catsQuery })">&lsaquo; Prev</a>
+                        </li>
+
+                        @{
+                            // show a window of pages around current
+                            var start = Math.Max(1, Model.Page - 3);
+                            var end = Math.Min(totalPages, Model.Page + 3);
+                        }
+                        @for (int i = start; i <= end; i++)
+                        {
+                            <li class="page-item @(i == Model.Page ? "active" : "")">
+                                <a class="page-link steam" href="@Url.Action("Index", "Categories", new { page = i, pageSize = Model.PageSize, search = Model.Search, categories = catsQuery })">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.Page >= totalPages ? "disabled" : "")">
+                            <a class="page-link steam" href="@Url.Action("Index", "Categories", new { page = Model.Page + 1, pageSize = Model.PageSize, search = Model.Search, categories = catsQuery })">Next &rsaquo;</a>
+                        </li>
+                        <li class="page-item @(Model.Page >= totalPages ? "disabled" : "")">
+                            <a class="page-link steam" href="@Url.Action("Index", "Categories", new { page = totalPages, pageSize = Model.PageSize, search = Model.Search, categories = catsQuery })">Last &raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </section>
+    </div>
+</div>

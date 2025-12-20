@@ -123,7 +123,8 @@ namespace Gauniv.WebServer.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-
+                    
+                    var addRoleRes = await _userManager.AddToRoleAsync(user, "User");
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -143,6 +144,17 @@ namespace Gauniv.WebServer.Areas.Identity.Pages.Account
                     else
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
+
+                        if (await _userManager.IsInRoleAsync(user, "Admin"))
+                        {
+                            return RedirectToAction("Index", "Admin");
+                        }
+
+                        if (await _userManager.IsInRoleAsync(user, "User"))
+                        {
+                            return RedirectToAction("Index", "GamesWeb");
+                        }
+
                         return LocalRedirect(returnUrl);
                     }
                 }

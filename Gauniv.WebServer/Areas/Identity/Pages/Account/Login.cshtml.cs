@@ -112,18 +112,15 @@ namespace Gauniv.WebServer.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
                     
-                    // Redirect admin users to Admin panel
                     var user = await _userManager.FindByEmailAsync(Input.Email);
-                    if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
+                    if (user != null && (await _userManager.IsInRoleAsync(user, "Admin") || await _userManager.IsInRoleAsync(user, "User")))
                     {
-                        return RedirectToAction("Index", "Admin");
+                        return RedirectToAction("Index", "Home");
                     }
                     
                     return LocalRedirect(returnUrl);

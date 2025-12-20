@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <!-- Définition claire du TargetFramework selon la plateforme d'exécution MSBuild -->
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('osx'))">
     <TargetFramework>net10.0-maccatalyst</TargetFramework>
   </PropertyGroup>

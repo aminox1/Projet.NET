@@ -46,5 +46,11 @@ namespace Gauniv.WebServer.Data
         
         // Navigation property
         public ICollection<Game> Games { get; set; } = new List<Game>();
+
+        [Column(TypeName = "bytea")]
+        public byte[]? ImageData { get; set; }
+
+        [MaxLength(200)]
+        public string? ImageContentType { get; set; }
     }
 }

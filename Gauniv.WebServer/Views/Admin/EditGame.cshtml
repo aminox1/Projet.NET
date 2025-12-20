@@ -8,6 +8,14 @@
 
 <div class="container mt-4">
     <h1 class="mb-4">Edit Game: @Model.Name</h1>
+    @if (TempData["EditGameSuccess"] != null)
+    {
+        <div class="alert alert-success">@TempData["EditGameSuccess"]</div>
+    }
+    @if (TempData["EditGameError"] != null)
+    {
+        <div class="alert alert-danger">@TempData["EditGameError"]</div>
+    }
 
     <form asp-action="EditGame" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
@@ -65,17 +73,109 @@
             <small class="form-text text-muted">Leave empty to keep current file</small>
         </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Save Changes
-            </button>
-            <a asp-action="Games" class="btn btn-secondary">
-                <i class="bi bi-x-circle"></i> Cancel
-            </a>
-        </div>
-    </form>
-</div>
+        <div class="mb-3">
+            <label class="form-label">Images</label>
+            <div class="d-flex flex-wrap gap-3">
+                @if (Model.Images != null && Model.Images.Any())
+                {
+                    foreach (var img in Model.Images.OrderBy(i => i.SortOrder))
+                    {
+                        <div class="card" style="width: 10rem;">
+                            <img src="@Url.Action("GetImage", "GamesWeb", new { id = img.Id })" class="card-img-top" alt="Game image" style="height:8rem;object-fit:cover;" />
+                            <div class="card-body p-2">
+                                @if (img.IsPrimary)
+                                {
+                                    <span class="badge bg-primary">Primary</span>
+                                }
+                                <div class="mt-2 d-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="postAction('@Url.Action("DeleteGameImage","Admin")',{ imageId: '@img.Id', gameId: '@Model.Id' })">
+                                        Delete
+                                    </button>
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="postAction('@Url.Action("SetPrimaryGameImage","Admin")',{ imageId: '@img.Id', gameId: '@Model.Id' })">
+                                        Set primary
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-muted">No images uploaded yet.</div>
+                }
+            </div>
+
+            <div class="mt-3">
+                <div class="input-group">
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="setPrimaryImage" id="setPrimaryImage" />
+                    <label class="form-check-label" for="setPrimaryImage">Set as primary</label>
+                </div>
+             </div>
+         </div>
+
+         <div class="mt-4">
+             <button type="submit" class="btn btn-primary">
+                 <i class="bi bi-save"></i> Save Changes
+             </button>
+             <button type="button" class="btn btn-secondary" onclick="window.location.reload();">
+                 <i class="bi bi-x-circle"></i> Cancel
+             </button>
+         </div>
+     </form>
+ </div>
+
+ @section Scripts {
+     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+     <script>
+        async function postAction(url, data) {
+            try {
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const token = tokenInput ? tokenInput.value : '';
+                const form = new FormData();
+                for (const k in data) form.append(k, data[k]);
+                if (token) form.append('__RequestVerificationToken', token);
+
+                const res = await fetch(url, { 
+                    method: 'POST', 
+                    body: form, 
+                    credentials: 'same-origin',
+                    headers: Object.assign({ 'X-Requested-With': 'XMLHttpRequest' }, token ? { 'RequestVerificationToken': token } : {})
+                 });
+ 
+                try {
+                    const payload = await res.clone().json();
+                    if (payload && payload.redirectUrl) {
+                        window.location.href = payload.redirectUrl + (payload.redirectUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+                        return;
+                    }
+                } catch (e) {
+                }
+ 
+                 if (res.redirected) {
+                     window.location.href = res.url;
+                     return;
+                 }
+ 
+                 window.location.reload();
+            } catch (err) {
+                console.error(err);
+                showInlineAlert('danger', 'Erreur lors de la requête');
+             }
+         }
+
+        function showInlineAlert(level, message) {
+            const container = document.querySelector('.container');
+            if (!container) return alert(message);
+            const div = document.createElement('div');
+            div.className = `alert alert-${level}`;
+            div.innerText = message;
+            container.insertBefore(div, container.firstChild);
+        }
+     </script>
+ }

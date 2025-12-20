@@ -29,6 +29,7 @@
 using Gauniv.WebServer.Data;
 using Gauniv.WebServer.Dtos;
 using Gauniv.WebServer.Models;
+using Gauniv.WebServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -37,10 +38,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Gauniv.WebServer.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class AdminController(ApplicationDbContext appDbContext, UserManager<User> userManager) : Controller
+    public class AdminController(ApplicationDbContext appDbContext, UserManager<User> userManager, ImageService imageService, CategoryService categoryService) : Controller
     {
         private readonly ApplicationDbContext appDbContext = appDbContext;
         private readonly UserManager<User> userManager = userManager;
+        private readonly ImageService _imageService = imageService;
+        private readonly CategoryService _categoryService = categoryService;
 
         // GET: Admin/Index
         public IActionResult Index()
@@ -143,6 +146,7 @@ namespace Gauniv.WebServer.Controllers
         {
             var local_game = await appDbContext.Games
                 .Include(g => g.Categories)
+                .Include(g => g.Images)
                 .FirstOrDefaultAsync(g => g.Id == id);
 
             if (local_game == null)
@@ -159,7 +163,7 @@ namespace Gauniv.WebServer.Controllers
         // POST: Admin/EditGame/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditGame(int id, UpdateGameDto model, IFormFile? payload)
+        public async Task<IActionResult> EditGame(int id, UpdateGameDto model, IFormFile? payload, IFormFile? imageFile, bool? setPrimaryImage)
         {
             var local_game = await appDbContext.Games
                 .Include(g => g.Categories)
@@ -179,10 +183,10 @@ namespace Gauniv.WebServer.Controllers
             // Update properties
             if (!string.IsNullOrWhiteSpace(model.Name))
                 local_game.Name = model.Name;
-            
+
             if (!string.IsNullOrWhiteSpace(model.Description))
                 local_game.Description = model.Description;
-            
+
             if (model.Price.HasValue)
                 local_game.Price = model.Price.Value;
 
@@ -197,15 +201,15 @@ namespace Gauniv.WebServer.Controllers
 
                 var local_uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "games");
                 Directory.CreateDirectory(local_uploadsFolder);
-                
+
                 var local_uniqueFileName = $"{Guid.NewGuid()}_{payload.FileName}";
                 var local_filePath = Path.Combine(local_uploadsFolder, local_uniqueFileName);
-                
+
                 using (var local_fileStream = new FileStream(local_filePath, FileMode.Create))
                 {
                     await payload.CopyToAsync(local_fileStream);
                 }
-                
+
                 local_game.PayloadPath = local_filePath;
                 local_game.Size = payload.Length;
             }
@@ -222,7 +226,32 @@ namespace Gauniv.WebServer.Controllers
 
             await appDbContext.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Games));
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var allowed = new[] { "image/png", "image/jpeg", "image/webp" };
+                if (!allowed.Contains(imageFile.ContentType))
+                {
+                    TempData["EditGameError"] = "Type d'image non autorisé";
+                    return RedirectToAction(nameof(EditGame), new { id });
+                }
+
+                if (imageFile.Length > 10 * 1024 * 1024)
+                {
+                    TempData["EditGameError"] = "Fichier trop volumineux";
+                    return RedirectToAction(nameof(EditGame), new { id });
+                }
+
+                await _imageService.UploadImageAsync(id, imageFile.OpenReadStream(), imageFile.ContentType ?? "application/octet-stream", setPrimaryImage == true);
+                TempData["EditGameSuccess"] = "Image uploaded";
+            }
+
+            if (TempData["EditGameSuccess"] == null)
+            {
+                TempData["EditGameSuccess"] = "Changes saved";
+            }
+
+            // Redirect back to EditGame so the admin stays on the same page (PRG pattern)
+            return RedirectToAction(nameof(EditGame), new { id });
         }
 
         // POST: Admin/DeleteGame/5
@@ -247,6 +276,31 @@ namespace Gauniv.WebServer.Controllers
             await appDbContext.SaveChangesAsync();
 
             return RedirectToAction(nameof(Games));
+        }
+
+        // POST: Admin/DeleteGameImage
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteGameImage(int imageId, int gameId)
+        {
+            await _imageService.DeleteImageAsync(imageId);
+
+            TempData["EditGameSuccess"] = "Image supprimée";
+
+            var redirect = Url.Action("EditGame", "Admin", new { id = gameId });
+            return Json(new { success = true, message = "Image supprimée", redirectUrl = redirect });
+        }
+
+        // POST: Admin/SetPrimaryGameImage
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetPrimaryGameImage(int imageId, int gameId)
+        {
+            await _imageService.SetPrimaryAsync(imageId);
+
+            TempData["EditGameSuccess"] = "Image définie comme principale";
+            var redirect = Url.Action("EditGame", "Admin", new { id = gameId });
+            return Json(new { success = true, message = "Image définie comme principale", redirectUrl = redirect });
         }
 
         #endregion
@@ -304,7 +358,7 @@ namespace Gauniv.WebServer.Controllers
         // POST: Admin/EditCategory/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCategory(int id, Category model)
+        public async Task<IActionResult> EditCategory(int id, Category model, IFormFile? imageFile)
         {
             if (id != model.Id)
             {
@@ -319,7 +373,32 @@ namespace Gauniv.WebServer.Controllers
             appDbContext.Update(model);
             await appDbContext.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Categories));
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var allowed = new[] { "image/png", "image/jpeg", "image/webp" };
+                if (!allowed.Contains(imageFile.ContentType))
+                {
+                    TempData["EditCategoryError"] = "Type d'image non autorisé";
+                    return RedirectToAction(nameof(EditCategory), new { id });
+                }
+
+                if (imageFile.Length > 5 * 1024 * 1024)
+                {
+                    TempData["EditCategoryError"] = "Fichier trop volumineux (max 5MB)";
+                    return RedirectToAction(nameof(EditCategory), new { id });
+                }
+
+                using var ms = new MemoryStream();
+                await imageFile.CopyToAsync(ms);
+                await _categoryService.SaveImageAsync(id, ms.ToArray(), imageFile.ContentType ?? "application/octet-stream");
+                TempData["EditCategorySuccess"] = "Image uploaded";
+            }
+            else
+            {
+                TempData["EditCategorySuccess"] = "Category saved";
+            }
+
+            return RedirectToAction(nameof(EditCategory), new { id });
         }
 
         // POST: Admin/DeleteCategory/5
