@@ -90,9 +90,13 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddMapster();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<PlayerPresenceService>();
 builder.Services.AddHostedService<OnlineService>();
 builder.Services.AddHostedService<SetupService>();
 builder.Services.AddScoped<MappingProfile, MappingProfile>();
+builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<CategoryService>();
 
 var app = builder.Build();
 
@@ -162,5 +166,6 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/openapi/v1.json", "v1");
 });
 app.MapHub<OnlineHub>("/online");
+app.MapHub<Gauniv.WebServer.Hubs.PlayersHub>("/hubs/players");
 
 app.Run();

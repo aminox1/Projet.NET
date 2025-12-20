@@ -1,0 +1,147 @@
+@model Gauniv.WebServer.ViewModels.GamesListViewModel
+@using System.Net
+@{
+    var baseUrl = ViewData["BaseUrl"] as string ?? Url.Action("Index", "Home");
+}
+
+<style>
+    .steam-card { border-radius: 6px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.08); transition: transform .12s ease, box-shadow .12s ease; }
+    .steam-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+    .steam-card .banner { height:180px; background:#111; display:flex; align-items:center; justify-content:center; }
+    .steam-card .banner img { width:100%; height:100%; object-fit:cover; display:block; }
+    .steam-card .card-body { padding: 12px; }
+    .steam-card .title { font-weight:700; font-size:1.05rem; margin-bottom:6px; }
+    .steam-card .meta { font-size:.85rem; color:#6c757d; }
+    .pagination.steam { justify-content:center; gap:8px; }
+    .page-link.steam { border-radius:6px; padding:8px 12px; }
+</style>
+
+<div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+    @foreach (var g in Model.Items)
+    {
+        var priceText = string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C}", g.Price);
+        string sizeText = "N/A";
+        try
+        {
+            var s = Convert.ToInt64(g.Size);
+            if (s > 0)
+            {
+                if (s >= 1024L * 1024L)
+                    sizeText = (s / 1024 / 1024) + " MB";
+                else
+                    sizeText = (s / 1024) + " KB";
+            }
+        }
+        catch { var sText = Convert.ToString(g.Size); sizeText = string.IsNullOrEmpty(sText) ? "N/A" : sText; }
+
+        <div class="col">
+            <div class="steam-card card h-100">
+                @{ var imgId = g.PrimaryImageId; }
+                <a asp-controller="GamesWeb" asp-action="Details" asp-route-id="@g.Id" class="text-decoration-none text-dark d-block">
+                    <div class="banner">
+                        @if (imgId.HasValue)
+                        {
+                            <img src="@Url.Action("GetImage","GamesWeb", new { id = imgId.Value })" alt="@g.Name" />
+                        }
+                        else
+                        {
+                            <div class="w-100 text-white d-flex align-items-center justify-content-center">Image</div>
+                        }
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="title">@g.Name</div>
+                        @{ var desc = g.Description ?? ""; string shortDesc = desc.Length > 140 ? desc.Substring(0, 140).TrimEnd() + "..." : desc; }
+                        <p class="card-text text-muted mb-2" style="flex:0 0 auto;">@shortDesc</p>
+
+                        <div class="mb-2">
+                            @if (g.Categories != null && g.Categories.Any())
+                            {
+                                foreach (var c in g.Categories)
+                                {
+                                    <span class="badge bg-secondary me-1">@c</span>
+                                }
+                            }
+                        </div>
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">@priceText</div>
+                                <div class="text-muted small">@sizeText</div>
+                            </div>
+
+                            <div class="text-end">
+                                        <a asp-controller="GamesWeb" asp-action="Details" asp-route-id="@g.Id" class="btn btn-sm btn-outline-secondary me-1">Détails</a>
+
+                                @if (g.IsOwned)
+                                {
+                                    <span class="badge bg-success">Possédé</span>
+                                }
+                                else if (User?.Identity?.IsAuthenticated == true && User.IsInRole("User"))
+                                {
+                                    <form asp-controller="GamesWeb" asp-action="Purchase" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@g.Id" />
+                                        <button class="btn btn-sm btn-primary">Acheter</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Pagination -->
+@{
+    var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+}
+@if (Model.TotalCount > Model.PageSize)
+{
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination steam">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link steam" href="@baseUrl?page=1&pageSize=@Model.PageSize">&laquo; First</a>
+            </li>
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link steam" href="@baseUrl?page=@(Model.Page - 1)&pageSize=@Model.PageSize">&lsaquo; Prev</a>
+            </li>
+
+            @{
+                var start = Math.Max(1, Model.Page - 3);
+                var end = Math.Min(totalPages, Model.Page + 3);
+                var baseQuery = new List<string>();
+                foreach (var q in Context.Request.Query)
+                {
+                    var key = q.Key;
+                    if (string.Equals(key, "page", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "pageSize", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    var val = q.Value.ToString();
+                    if (!string.IsNullOrEmpty(val)) baseQuery.Add($"{WebUtility.UrlEncode(key)}={WebUtility.UrlEncode(val)}");
+                }
+                var prefix = baseQuery.Count > 0 ? (baseUrl + "?" + string.Join("&", baseQuery) + "&") : (baseUrl + "?");
+            }
+
+            @for (int p = start; p <= end; p++)
+            {
+                var active = p == Model.Page ? "active" : "";
+                <li class="page-item @active"><a class="page-link steam" href="@($"{prefix}page={p}&pageSize={Model.PageSize}")">@p</a></li>
+            }
+
+            <li class="page-item @(Model.Page >= totalPages ? "disabled" : "")">
+                <a class="page-link steam" href="@($"{prefix}page={Model.Page + 1}&pageSize={Model.PageSize}")">Next &rsaquo;</a>
+            </li>
+            <li class="page-item @(Model.Page >= totalPages ? "disabled" : "")">
+                <a class="page-link steam" href="@($"{prefix}page={totalPages}&pageSize={Model.PageSize}")">Last &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-info-circle"></i> Aucun jeu trouvé.
+    </div>
+}

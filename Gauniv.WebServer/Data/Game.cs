@@ -60,5 +60,8 @@ namespace Gauniv.WebServer.Data
         public ICollection<Category> Categories { get; set; } = new List<Category>();
         
         public ICollection<User> Owners { get; set; } = new List<User>();
+
+        // Images for the game (one-to-many)
+        public ICollection<GameImage> Images { get; set; } = new List<GameImage>();
     }
 }

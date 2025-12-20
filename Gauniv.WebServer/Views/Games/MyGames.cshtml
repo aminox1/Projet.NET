@@ -1,0 +1,15 @@
+@model Gauniv.WebServer.ViewModels.GamesListViewModel
+
+@{
+    ViewData["Title"] = "Mes jeux";
+}
+
+<h1>Mes jeux</h1>
+
+@{
+    ViewData["BaseUrl"] = Url.Action("MyGames", "GamesWeb");
+    // Indiquer au partial de filtres de ne pas afficher le filtre "Possédé" ici
+    ViewData["HideIsOwnedFilter"] = true;
+}
+@await Html.PartialAsync("~/Views/Shared/_GamesFilters.cshtml", Model)
+@await Html.PartialAsync("~/Views/Shared/_GamesCards.cshtml", Model)

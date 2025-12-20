@@ -67,6 +67,12 @@ namespace Gauniv.WebServer.Services
                     roleManager.CreateAsync(new IdentityRole("Admin")).Wait();
                 }
 
+                // Create User role if it doesn't exist (basic user role)
+                if (!roleManager.RoleExistsAsync("User").Result)
+                {
+                    roleManager.CreateAsync(new IdentityRole("User")).Wait();
+                }
+                
                 // Create test user
                 var testUser = userManager.FindByEmailAsync("test@test.com").Result;
                 if (testUser == null)
@@ -80,6 +86,39 @@ namespace Gauniv.WebServer.Services
                         LastName = "User"
                     };
                     userManager.CreateAsync(testUser, "password").Wait();
+                    // Assign the test user to the User role
+                    userManager.AddToRoleAsync(testUser, "User").Wait();
+                }
+                else
+                {
+                    // Ensure existing test user is in User role
+                    if (!userManager.IsInRoleAsync(testUser, "User").Result)
+                    {
+                        userManager.AddToRoleAsync(testUser, "User").Wait();
+                    }
+                }
+
+                // Create a second test user
+                var testUser2 = userManager.FindByEmailAsync("user2@test.com").Result;
+                if (testUser2 == null)
+                {
+                    testUser2 = new User()
+                    {
+                        UserName = "user2@test.com",
+                        Email = "user2@test.com",
+                        EmailConfirmed = true,
+                        FirstName = "Test2",
+                        LastName = "User2"
+                    };
+                    userManager.CreateAsync(testUser2, "password").Wait();
+                    userManager.AddToRoleAsync(testUser2, "User").Wait();
+                }
+                else
+                {
+                    if (!userManager.IsInRoleAsync(testUser2, "User").Result)
+                    {
+                        userManager.AddToRoleAsync(testUser2, "User").Wait();
+                    }
                 }
 
                 // Create admin user
@@ -96,6 +135,13 @@ namespace Gauniv.WebServer.Services
                     };
                     userManager.CreateAsync(adminUser, "admin123").Wait();
                     userManager.AddToRoleAsync(adminUser, "Admin").Wait();
+                }
+                else
+                {
+                    if (!userManager.IsInRoleAsync(adminUser, "Admin").Result)
+                    {
+                        userManager.AddToRoleAsync(adminUser, "Admin").Wait();
+                    }
                 }
 
                 // Create sample categories
