@@ -34,6 +34,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using System.Text;
+using System.IO.Compression;
 
 namespace Gauniv.WebServer.Services
 {
@@ -50,29 +51,250 @@ namespace Gauniv.WebServer.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            using (var scope = serviceProvider.CreateScope()) // this will use `IServiceScopeFactory` internally
+            using (var scope = serviceProvider.CreateScope())
             {
                 applicationDbContext = scope.ServiceProvider.GetService<ApplicationDbContext>();
-                var userSignInManager = scope.ServiceProvider.GetService<UserManager<User>>();
-                var signInManager = scope.ServiceProvider.GetService<SignInManager<User>>();
+                var userManager = scope.ServiceProvider.GetService<UserManager<User>>();
+                var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
 
-                if (applicationDbContext is null)
+                if (applicationDbContext is null || userManager is null || roleManager is null)
                 {
-                    throw new Exception("ApplicationDbContext is null");
+                    throw new Exception("Required services are null");
                 }
 
-                var r = userSignInManager?.CreateAsync(new User()
+                // Create Admin role if it doesn't exist
+                if (!roleManager.RoleExistsAsync("Admin").Result)
                 {
-                    UserName = "test@test.com",
-                    Email = "test@test.com",
-                    EmailConfirmed = true
-                }, "password").Result;
+                    roleManager.CreateAsync(new IdentityRole("Admin")).Wait();
+                }
 
-                // ....
+                // Create User role if it doesn't exist (basic user role)
+                if (!roleManager.RoleExistsAsync("User").Result)
+                {
+                    roleManager.CreateAsync(new IdentityRole("User")).Wait();
+                }
+                
+                // Create test user
+                var testUser = userManager.FindByEmailAsync("test@test.com").Result;
+                if (testUser == null)
+                {
+                    testUser = new User()
+                    {
+                        UserName = "test@test.com",
+                        Email = "test@test.com",
+                        EmailConfirmed = true,
+                        FirstName = "Test",
+                        LastName = "User"
+                    };
+                    userManager.CreateAsync(testUser, "password").Wait();
+                    // Assign the test user to the User role
+                    userManager.AddToRoleAsync(testUser, "User").Wait();
+                }
+                else
+                {
+                    // Ensure existing test user is in User role
+                    if (!userManager.IsInRoleAsync(testUser, "User").Result)
+                    {
+                        userManager.AddToRoleAsync(testUser, "User").Wait();
+                    }
+                }
+
+                // Create a second test user
+                var testUser2 = userManager.FindByEmailAsync("user2@test.com").Result;
+                if (testUser2 == null)
+                {
+                    testUser2 = new User()
+                    {
+                        UserName = "user2@test.com",
+                        Email = "user2@test.com",
+                        EmailConfirmed = true,
+                        FirstName = "Test2",
+                        LastName = "User2"
+                    };
+                    userManager.CreateAsync(testUser2, "password").Wait();
+                    userManager.AddToRoleAsync(testUser2, "User").Wait();
+                }
+                else
+                {
+                    if (!userManager.IsInRoleAsync(testUser2, "User").Result)
+                    {
+                        userManager.AddToRoleAsync(testUser2, "User").Wait();
+                    }
+                }
+
+                // Create admin user
+                var adminUser = userManager.FindByEmailAsync("admin@gauniv.com").Result;
+                if (adminUser == null)
+                {
+                    adminUser = new User()
+                    {
+                        UserName = "admin@gauniv.com",
+                        Email = "admin@gauniv.com",
+                        EmailConfirmed = true,
+                        FirstName = "Admin",
+                        LastName = "Gauniv"
+                    };
+                    userManager.CreateAsync(adminUser, "admin123").Wait();
+                    userManager.AddToRoleAsync(adminUser, "Admin").Wait();
+                }
+                else
+                {
+                    if (!userManager.IsInRoleAsync(adminUser, "Admin").Result)
+                    {
+                        userManager.AddToRoleAsync(adminUser, "Admin").Wait();
+                    }
+                }
+
+                // Create sample categories
+                if (!applicationDbContext.Categories.Any())
+                {
+                    var categories = new List<Category>
+                    {
+                        new Category { Name = "Action", Description = "Fast-paced games with physical challenges" },
+                        new Category { Name = "Adventure", Description = "Story-driven exploration games" },
+                        new Category { Name = "RPG", Description = "Role-playing games" },
+                        new Category { Name = "Strategy", Description = "Games requiring planning and tactics" },
+                        new Category { Name = "Simulation", Description = "Games simulating real-world activities" },
+                        new Category { Name = "Puzzle", Description = "Games based on problem solving" }
+                    };
+                    applicationDbContext.Categories.AddRange(categories);
+                    applicationDbContext.SaveChanges();
+                }
+
+                // Create sample games
+                if (!applicationDbContext.Games.Any())
+                {
+                    var actionCategory = applicationDbContext.Categories.First(c => c.Name == "Action");
+                    var adventureCategory = applicationDbContext.Categories.First(c => c.Name == "Adventure");
+                    var rpgCategory = applicationDbContext.Categories.First(c => c.Name == "RPG");
+
+                    // Create demo game files - stored OUTSIDE database as per professor's requirement
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "games");
+                    Directory.CreateDirectory(uploadsFolder);
+
+                    // Create demo ZIP files with actual game executables
+                    var gamePaths = new List<string>();
+                    
+                    // Game 1: Epic Quest
+                    var epicQuestZip = Path.Combine(uploadsFolder, "Epic_Quest.zip");
+                    if (!File.Exists(epicQuestZip))
+                    {
+                        CreateDemoGameZip(epicQuestZip, "Epic Quest", "Welcome to Epic Quest!\n\nThis is a demo adventure game.");
+                    }
+                    gamePaths.Add(epicQuestZip);
+                    
+                    // Game 2: Space Shooter
+                    var spaceShooterZip = Path.Combine(uploadsFolder, "Space_Shooter.zip");
+                    if (!File.Exists(spaceShooterZip))
+                    {
+                        CreateDemoGameZip(spaceShooterZip, "Space Shooter", "Space Shooter Demo\n\nUse arrow keys to move, Space to shoot!");
+                    }
+                    gamePaths.Add(spaceShooterZip);
+                    
+                    // Game 3: Fantasy World
+                    var fantasyWorldZip = Path.Combine(uploadsFolder, "Fantasy_World.zip");
+                    if (!File.Exists(fantasyWorldZip))
+                    {
+                        CreateDemoGameZip(fantasyWorldZip, "Fantasy World", "Fantasy World Demo\n\nBuild your kingdom and rule the lands!");
+                    }
+                    gamePaths.Add(fantasyWorldZip);
+
+                    var games = new List<Game>
+                    {
+                        new Game 
+                        { 
+                            Name = "Epic Quest", 
+                            Description = "An epic adventure through mystical lands", 
+                            Price = 29.99m,
+                            PayloadPath = gamePaths[0],
+                            Size = new FileInfo(gamePaths[0]).Length,
+                            Categories = new List<Category> { adventureCategory, rpgCategory }
+                        },
+                        new Game 
+                        { 
+                            Name = "Space Shooter", 
+                            Description = "Fast-paced space combat action", 
+                            Price = 19.99m,
+                            PayloadPath = gamePaths[1],
+                            Size = new FileInfo(gamePaths[1]).Length,
+                            Categories = new List<Category> { actionCategory }
+                        },
+                        new Game 
+                        { 
+                            Name = "Fantasy World", 
+                            Description = "Build your own fantasy kingdom", 
+                            Price = 39.99m,
+                            PayloadPath = gamePaths[2],
+                            Size = new FileInfo(gamePaths[2]).Length,
+                            Categories = new List<Category> { rpgCategory, adventureCategory }
+                        }
+                    };
+                    applicationDbContext.Games.AddRange(games);
+                }
 
                 applicationDbContext.SaveChanges();
 
                 return Task.CompletedTask;
+            }
+        }
+        
+        /// <summary>
+        /// Creates a demo game ZIP file with a simple executable
+        /// Games are stored on filesystem as per professor's requirement (not in database)
+        /// </summary>
+        private void CreateDemoGameZip(string zipPath, string gameName, string description)
+        {
+            // Create a temporary directory for game files
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                // Create a batch file that acts as the game executable
+                var exePath = Path.Combine(tempDir, $"{gameName.Replace(" ", "_")}.bat");
+                var batchContent = $@"@echo off
+title {gameName}
+color 0A
+cls
+echo ========================================
+echo {gameName}
+echo ========================================
+echo.
+echo {description}
+echo.
+echo Press any key to exit...
+pause > nul
+";
+                File.WriteAllText(exePath, batchContent);
+
+                // Create a README file
+                var readmePath = Path.Combine(tempDir, "README.txt");
+                File.WriteAllText(readmePath, $@"{gameName}
+{description}
+
+To play:
+1. Extract this ZIP file
+2. Run {gameName.Replace(" ", "_")}.bat
+
+Enjoy!
+");
+
+                // Create the ZIP file with streaming to minimize memory usage
+                using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+                {
+                    archive.CreateEntryFromFile(exePath, Path.GetFileName(exePath));
+                    archive.CreateEntryFromFile(readmePath, Path.GetFileName(readmePath));
+                }
+
+                Console.WriteLine($"[SetupService] Created demo game ZIP: {zipPath} ({new FileInfo(zipPath).Length} bytes)");
+            }
+            finally
+            {
+                // Clean up temp directory
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
             }
         }
 

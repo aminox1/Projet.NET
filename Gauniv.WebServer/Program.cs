@@ -67,10 +67,10 @@ builder.Services.Configure<RequestLocalizationOptions>(s =>
 });
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-/*builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));*/
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase("Gauniv.db"));
+    options.UseNpgsql(connectionString));
+/*builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseInMemoryDatabase("Gauniv.db"));*/
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityApiEndpoints<User>(options => {
@@ -81,6 +81,20 @@ builder.Services.AddIdentityApiEndpoints<User>(options => {
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
 }).AddRoles<IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Configure file upload limits for game files (500 MB max)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 524_288_000; // 500 MB
+    options.ValueLengthLimit = 524_288_000;
+    options.BufferBodyLengthLimit = 524_288_000;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 524_288_000; // 500 MB
+});
+
 builder.Services.AddControllersWithViews().AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix).AddDataAnnotationsLocalization();
 builder.Services.AddOpenApi(options =>
 {
@@ -90,9 +104,13 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddMapster();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<PlayerPresenceService>();
 builder.Services.AddHostedService<OnlineService>();
 builder.Services.AddHostedService<SetupService>();
 builder.Services.AddScoped<MappingProfile, MappingProfile>();
+builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<CategoryService>();
 
 var app = builder.Build();
 
@@ -129,10 +147,22 @@ app.MapGroup("Bearer").MapPost("/login", async Task<Results<Ok<AccessTokenRespon
             ([FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
         {
             var signInManager = sp.GetRequiredService<SignInManager<User>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
 
             var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
             var isPersistent = (useCookies == true) && (useSessionCookies != true);
             signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+
+            // Check if user exists and is an admin
+            var user = await userManager.FindByEmailAsync(login.Email);
+            if (user != null)
+            {
+                var isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+                if (isAdmin)
+                {
+                    return TypedResults.Problem("Admin accounts cannot login to the client application. Please use the web interface.", statusCode: StatusCodes.Status403Forbidden);
+                }
+            }
 
             var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
 
@@ -162,5 +192,6 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/openapi/v1.json", "v1");
 });
 app.MapHub<OnlineHub>("/online");
+app.MapHub<Gauniv.WebServer.Hubs.PlayersHub>("/hubs/players");
 
 app.Run();

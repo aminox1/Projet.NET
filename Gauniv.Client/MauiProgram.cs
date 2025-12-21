@@ -45,6 +45,11 @@ namespace Gauniv.Client
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            // Register services
+            builder.Services.AddSingleton<NetworkService>(NetworkService.Instance);
+            builder.Services.AddSingleton<GameService>();
+            builder.Services.AddSingleton<LocalGameManager>(LocalGameManager.Instance);
+
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif

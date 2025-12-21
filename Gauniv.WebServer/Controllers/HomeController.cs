@@ -27,31 +27,59 @@
 // Please respect the team's standards for any future contribution
 #endregion
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using CommunityToolkit.HighPerformance;
 using Gauniv.WebServer.Data;
 using Gauniv.WebServer.Models;
-using Microsoft.AspNetCore.Authorization;
+using Gauniv.WebServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Packaging;
-using X.PagedList.Extensions;
+using Gauniv.WebServer.ViewModels;
 
 namespace Gauniv.WebServer.Controllers
 {
-    public class HomeController(ILogger<HomeController> logger, ApplicationDbContext applicationDbContext, UserManager<User> userManager) : Controller
+    public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger = logger;
-        private readonly ApplicationDbContext applicationDbContext = applicationDbContext;
-        private readonly UserManager<User> userManager = userManager;
+         private readonly UserManager<Gauniv.WebServer.Data.User> _userManager;
+         private readonly GameService _gameService;
 
-        public IActionResult Index()
+        public HomeController(UserManager<Gauniv.WebServer.Data.User> userManager, GameService gameService)
         {
-            return View(new List<Game> { new() { Id = 0 } });
+            _userManager = userManager;
+            _gameService = gameService;
         }
 
+         // GET: /
+         public async Task<IActionResult> Index(string? name, decimal? minPrice, decimal? maxPrice, string[]? category, bool? isOwned, long? minSize, long? maxSize, int page = 1, int pageSize = 10)
+         {
+             var userId = _userManager.GetUserId(User);
+             if (!User?.Identity?.IsAuthenticated ?? true || !User.IsInRole("User"))
+             {
+                 isOwned = null;
+             }
+             IEnumerable<string>? cats = category;
+             long? minSizeBytes = null;
+             long? maxSizeBytes = null;
+             const long BYTES_IN_MO = 1024L * 1024L;
+             if (minSize.HasValue) minSizeBytes = minSize.Value * BYTES_IN_MO;
+             if (maxSize.HasValue) maxSizeBytes = maxSize.Value * BYTES_IN_MO;
+
+             var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned, minSizeBytes, maxSizeBytes, page, pageSize);
+
+             var vm = new Gauniv.WebServer.ViewModels.GamesListViewModel
+             {
+                 Items = items,
+                 TotalCount = total,
+                 Page = page,
+                 PageSize = pageSize,
+                 Name = name,    
+                 MinPrice = minPrice,
+                 MaxPrice = maxPrice,
+                 Category = category != null ? string.Join(",", category) : null,
+                 IsOwned = isOwned,
+                 MinSize = minSize,
+                 MaxSize = maxSize
+             };
+             return View("~/Views/Home/Index.cshtml", vm);
+         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

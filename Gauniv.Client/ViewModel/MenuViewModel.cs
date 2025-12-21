@@ -12,20 +12,47 @@ namespace Gauniv.Client.ViewModel
 {
     public partial class MenuViewModel : ObservableObject
     {
+        private readonly NetworkService networkService;
+
         [RelayCommand]
         public void GoToProfile() => NavigationService.Instance.Navigate<Profile>([]);
 
         [ObservableProperty]
-        private bool isConnected = NetworkService.Instance.Token != null;
+        private bool isConnected;
 
         public MenuViewModel()
         {
-            NetworkService.Instance.OnConnected += Instance_OnConnected;
+            networkService = NetworkService.Instance;
+            
+            // Check initial state
+            IsConnected = !string.IsNullOrEmpty(networkService.Token);
+            
+            // Subscribe to connection changes
+            networkService.OnConnected += Instance_OnConnected;
+            
+            // Check token status periodically
+            _ = CheckConnectionStatusAsync();
         }
 
         private void Instance_OnConnected()
         {
             IsConnected = true;
+        }
+
+        private async Task CheckConnectionStatusAsync()
+        {
+            while (true)
+            {
+                await Task.Delay(1000); // Check every second
+                var wasConnected = IsConnected;
+                var nowConnected = !string.IsNullOrEmpty(networkService.Token);
+                
+                if (wasConnected != nowConnected)
+                {
+                    IsConnected = nowConnected;
+                    System.Diagnostics.Debug.WriteLine($"[MenuViewModel] Connection status changed: {IsConnected}");
+                }
+            }
         }
     }
 }

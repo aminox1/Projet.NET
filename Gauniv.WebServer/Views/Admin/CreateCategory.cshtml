@@ -1,0 +1,38 @@
+@model Gauniv.WebServer.Dtos.CreateCategoryDto
+
+@{
+    ViewData["Title"] = "Créer une catégorie";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Créer une nouvelle catégorie</h1>
+
+    <form asp-action="CreateCategory" method="post">
+        @Html.AntiForgeryToken()
+        
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Nom de la catégorie</label>
+            <input asp-for="Name" class="form-control" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description (optionnelle)</label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Créer la catégorie
+            </button>
+            <a asp-action="Categories" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -45,13 +45,41 @@ namespace Gauniv.Client.Services
         [ObservableProperty]
         private string token;
         public HttpClient httpClient;
+        
+        // Use 127.0.0.1 instead of localhost for Windows loopback exemption
+        private const string BaseUrl = "http://127.0.0.1:5231";
 
         public NetworkService() {
-            httpClient = new HttpClient();
+            var handler = new HttpClientHandler();
+            // Allow all certificates in development
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+            
+            httpClient = new HttpClient(handler);
+            httpClient.BaseAddress = new Uri(BaseUrl);
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
             Token = null;
+            
+            System.Diagnostics.Debug.WriteLine($"[NetworkService] Initialized with BaseUrl: {BaseUrl}");
         }
 
-        public event Action OnConnected;
+        public event Action? OnConnected;
+        
+        public void SetAuthToken(string token)
+        {
+            Token = token;
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue("Bearer", token);
+            
+            System.Diagnostics.Debug.WriteLine($"[NetworkService] Auth token set, triggering OnConnected event");
+            OnConnected?.Invoke();
+        }
+        
+        public void ClearAuthToken()
+        {
+            Token = null;
+            httpClient.DefaultRequestHeaders.Authorization = null;
+            System.Diagnostics.Debug.WriteLine($"[NetworkService] Auth token cleared");
+        }
 
     }
 }

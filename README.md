@@ -1,328 +1,259 @@
-# Plateforme de distribution de contenu + Editeur
+# Gauniv - Plateforme de distribution de jeux
 
-## But
+Ce dépôt contient la solution Gauniv : un serveur web (API + interface d'administration et d'achat de jeux) et une application cliente Windows (MAUI) permettant de parcourir, acheter, télécharger et lancer des jeux.
 
-Construire un web service avec son client Windows pour gérer une plateforme de distribution de contenu limitée aux jeux vidéo. 
+---
 
-Ajouter à celui-ci un jeu multijoueur comprenant le serveur ainsi que le jeu correspondant.t
+## Table des matières
 
-## A rendre
+- [Etat & répartition](#etat--r%C3%A9partition)
+- [Présentation rapide](#pr%C3%A9sentation-rapide)
+- [Application cliente Windows (MAUI) - résumé des fonctionnalités](#application-cliente-windows-maui)
+  - [Navigation & architecture](#navigation--architecture)
+  - [Store (Index)](#store-index)
+  - [Library (Mes jeux)](#library-mes-jeux)
+  - [Profile](#profile)
+  - [Game Details](#game-details)
+  - [Services & gestion locale](#services--gestion-locale)
+- [Serveur Web (API)](#serveur-web-api)
+  - [Endpoints utilisés par le client](#endpoints-utilis%C3%A9s-par-le-client)
+  - [Sécurité / restriction admin](#s%C3%A9curit%C3%A9--restriction-admin)
+- [Serveur Web - Interface d'administration et d'achat de jeux](#serveur-web--interface-dadministration-hors-api)
+  - [Administration](#administration)
+  - [Utilisateur (administrateur et joueurs)](#utilisateur-vue-serveur-web)
+  - [Tout le monde (accès public)](#tout-le-monde-acc%C3%A8s-public)
+  - [Options (bonus)](#options-et-contrainte-bonus--bonnes-pratiques)
+- [Technologies](#technologies)
+- [Comptes de test](#comptes-de-test)
+- [How to run (exécution rapide)](#how-to-run-ex%C3%A9cution-rapide)
+- [Points forts & notes](#points-forts--notes)
 
-Un web service de stockage et de gestion des jeux en ligne.
+---
 
-Un logiciel sous Windows pour parcourir les jeux, en télécharger un et jouer à celui-ci.
+## Etat & répartition
 
-Un serveur de jeu orchestrant le fonctionnement d’au moins un jeu.
+- Statut : application web et client lourd développés.
+- Répartition (conforme au dépôt) :
+  - Application web d'administration, de consultation et d'achat de jeux : développée par Mamitiana (interface web / backend).
+  - Application cliente Windows (MAUI) : développée par Amine.
+  - API REST : collaboration (backend par Mamitiana, intégration côté client par Amine).
 
-Une application permettant de jouer à un jeu.
+---
 
-# Contrainte
+## Présentation rapide
 
-Langages autorisés : C#, HTML, Javascript, CSS, TypeScript
+Gauniv propose :
 
-Serveur web : ASP.Net Core
+- Une interface d'administration web pour gérer jeux & catégories avec la possibilités d'acheter des jeux pour les joueurs.
+- Une API REST destinée au client Windows (et à d'autres clients).
+- Une application cliente Windows (MAUI) avec thème sombre inspiré de Steam, prise en charge du téléchargement et du lancement de jeux, et rendu HTML pour les descriptions.
 
-Logiciel Windows : WPF
+---
 
-Serveur de jeux : C#
+## Application cliente Windows (MAUI)
 
-Jeu : C# avec Godot, Unity, Winform, WPF, MAUI, ...
+Résumé des fonctionnalités implémentées côté client (détaillé fourni par l'équipe) :
 
-## Projet de départ
+### Navigation & architecture
 
-Votre solution devra être basée sur le projet Library.sln.
+- Application MAUI en MVVM (CommunityToolkit.Mvvm).
+- Navigation par Shell avec menu (Flyout).
+- Pages principales : Store (Store/Index), Library (Mes jeux), Profile.
+- Thème sombre inspiré de Steam (UX cohérente : fond sombre, accents colorés).
 
-La partie serveur est dans le projet Gauniv.WebServer.
+### Store (Index)
 
-La partie client est dans le projet Gauniv.Client.
+- Affichage : liste de tous les jeux fournis par l'API.
+- Pagination : prise en charge (chargement de 200 jeux depuis l'API).
+- Cartes de jeux : nom, description, prix, catégories, indication visuelle si jeu possédé.
+- Filtres : recherche par nom (SearchBar), filtre par catégorie (Picker), filtre prix (min/max), cases "Owned" / "Not Owned".
+- Bouton "Clear Filters" pour réinitialiser.
+- Filtres appliqués côté client en temps réel ; tri alphabétique disponible.
+- Actions : achat via API, navigation vers détails, rechargement automatique au retour.
 
-La connexion entre votre client et votre serveur est dans le projet Gauniv.Network.
+### Library (Mes jeux)
 
-Vous devrez créer les deux projets pour le serveur de jeu et le jeu lui-même.
+- Liste des jeux possédés avec statut : Downloaded, Not Downloaded, Running.
+- Taille affichée, filtres (nom, catégorie, statut : Downloaded/Not Downloaded/Running).
+- Actions conditionnelles : télécharger, lancer, arrêter, supprimer (boutons visibles selon statut).
+- Pull-to-refresh et pagination (ex : 50 jeux).
+- Gestion des binaires : téléchargement streaming depuis l'API, stockage local via LocalGameManager, gestion du cycle de vie (télécharger/lancer/supprimer), mise à jour automatique des statuts.
 
-Le serveur de jeu devra se nommer Gauniv.GameServer.
+### Profile
 
-Le jeu devra se nommer Gauniv.Game.
+- Authentification : formulaire email/password.
+- Affichage de l'email connecté, bouton de déconnexion.
+- Gestion du token Bearer (persisté selon configuration).
+- Restriction admin : détection des tentatives de connexion admin côté client et blocage côté serveur (HTTP 403) -message explicite et directive vers l'interface web.
 
-# Aide
+### Game Details
 
-## Base de données
+- Affiche : nom, description (support HTML), prix, catégories, statut de possession.
+- Rendu HTML : WebView stylée (thème Steam) pour les descriptions HTML, fallback en texte simple.
+- Actions : achat si non possédé, bouton retour.
 
-Pour des informations sur le fonctionnement d’Entity Framework : <https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=vs>
+### Services & gestion locale
 
-## MAUI – Gesture
+- `GameService` : authentification Bearer, récupération lists/pagination, achats, téléchargement des binaires, gestion des erreurs HTTP.
+- `LocalGameManager` : singleton gérant les jeux locaux (chemins, statuts, lancement/arrêt/suppression).
+- Converters XAML utiles fournis : BoolToText, BoolToColor, IsHtml, StripHtml, ListToString, etc.
 
-Pour les éléments ne prenant pas en charge l’évènement click
+---
 
-```xml
-<Button Clicked="" />
-```
+## Serveur Web (API)
 
-Vous pouvez utiliser les Gesture
+Le serveur (ASP.NET Core) expose les endpoints utilisés par le client :
 
-```xml
-<Label>
-    <Label.GestureRecognizers>
-        <TapGestureRecognizer Command="{Binding AppearingCommand}">
-    </Label.Behaviors>
-</Label>
-```
+### Endpoints principaux utilisés
 
-## MAUI – Evènement
+- `GET /api/1.0.0/Games/List` - liste paginée avec filtres (nom, catégories, prix, possédé, taille).
+- `GET /api/1.0.0/Games/MyGames` - jeux possédés (auth requis), pagination.
+- `GET /api/1.0.0/Games/Categories` - toutes les catégories.
+- `GET /api/1.0.0/Games/Details/{id}` - détails d’un jeu.
+- `GET /api/1.0.0/Games/Download/{id}` - téléchargement du binaire (streaming, ne charge pas tout en mémoire).
+- `POST /api/1.0.0/Games/Purchase/{id}` - achat d’un jeu.
+- `POST /Bearer/login` -authentification (renvoie token Bearer).
 
-Si vous avez besoin de transmettre un évènement depuis une View vers un ModelView vous pouvez utiliser un tag fournit par la librairie CommunityToolkit
+### Sécurité & restriction admin
 
-Ex :
+- La logique d'authentification a été adaptée pour empêcher l'utilisation de comptes admin depuis le client MAUI : tentative de login admin retourne HTTP 403 et un message invitant à utiliser l'interface web d'administration.
 
-```xml
-<Label Focused="xxx">
-```
+---
 
-Ajouter ce namespace :
+## Serveur Web
 
-```xml
-<xxx 
-    xmlns:toolkit=http://schemas.microsoft.com/dotnet/2022/maui/toolkit>
-</xxx>
-```
+La partie serveur web fournit, en complément de l'API REST, une interface web accessible via le navigateur (pages Razor / MVC) destinée à la fois aux administrateurs et aux joueurs.
 
-Vous pouvez alors utiliser le tag suivant :
-```xml
-<Label>
-    <Label.Behaviors>
-        <toolkit:EventToCommandBehavior EventName="Focused"
-            Command="{Binding FocusedCommand}"
-            x:TypeArguments="FocusedEventArgs" />
-    </Label.Behaviors>
-</Label>
-```
-## DTO
-Pour renvoyer un objet différent de celui contenu dans votre base utiliser un DTO
- - Vous fait votre DTO à la main: https://learn.microsoft.com/en-us/aspnet/web-api/overview/data/using-web-api-with-entity-framework/part-5
- - Vous utiliser la librairie AutoMapper: https://automapper.org/
+- Pour les administrateurs : une interface d'administration complète (gestion des jeux, catégories, uploads, logs d'audit, etc.).
+- Pour les joueurs : un catalogue consultable depuis le navigateur (liste des jeux, filtres, détails, catégories) et la possibilité d'acheter des jeux via l'interface web.
 
-## Entity Framewrok
-Si vous obtenez un objet null lors de la lecture d'une liaison d'un objet stocké en BDD
-ex : `appDbContext.Games.Categories.Where() => Categories is null`
+Ci‑dessous les fonctionnalités intégrées côté serveur web (hors API) :
 
-Pour que Entity Framework retourne les categories avec les jeux :
- - Utilisez la méthode Include : `appDbContext.Games.Include(b => b.Categories).Where(x => x.Price > 0)`
- - Utiliser le LazyLoading
-            https://learn.microsoft.com/en-us/ef/ef6/querying/related-data
+### Administration
 
+Un administrateur peut :
 
-## Devellopement
+- Ajouter des jeux
+  - Formulaire de création avec upload du binaire (streamé vers le stockage), sélection des catégories et métadonnées (nom, description, prix, taille estimée).
+- Supprimer des jeux
+- Modifier un jeu
+  - Édition des métadonnées, ajout/suppression de catégories, remplacement du binaire (avec streaming et rotation du nom de fichier).
+- Ajouter de nouvelles catégories
+  - Création rapide via formulaire (nom, description, image optionnelle).
+- Modifier une catégorie
+  - Édition du nom, de la description et des métadonnées associées.
+- Supprimer une catégorie
 
-Il peut être plus facile dans un premier temps de tester les différents logiciels séparément :
+Toutes les actions d'administration sont restreintes par la politique d'authentification (rôle `Admin`) et enregistrent des logs d'audit (qui a fait quoi et quand).
 
-- Injecter des données de test dans la BDD.
-- Avant de faire des requêtes HTTP depuis le client, créer votre interface grâce à des données statiques.
-- Au lieu de charger un vrai binaire, utiliser un fichier texte que vous ouvrez avec votre éditeur par défaut.
+### Joueur (vue serveur web)
 
-# Fonctionnalité attendue
+Côté interface web, un utilisateur connecté peut :
 
-## Livrable
+- Consulter la liste des jeux possédés (interface "Mes jeux" ou tableau de bord personnel).
+- Acheter un nouveau jeu depuis l'interface (procédure d'achat via formulaire / bouton et intégration du paiement simulé / marqueur d'achat en base).
+- Voir la liste complète de ses jeux et leur état (téléchargé, disponible, en cours d'utilisation).
+- Consulter la liste des autres joueurs inscrits et leurs statuts en temps réel (présence) - affichage via SignalR pour actualisation instantanée des statuts.
 
-- Un serveur web contenant: 
-  - Une interface d'administration
-  - Une API REST
-- Un client lourd permettant: 
-  - La consultation des jeux
-  - Le téléchargement de jeux
-  - Le lancement de jeux
-- Un serveur autonome de jeu
-- Un jeu
+### Tout le monde (accès public)
 
-# Plateforme de distribution de contenu (ASP.NET)
+Les pages publiques permettent :
 
-## Modèle de données
+- Consulter la liste de tous les jeux disponibles (catalogue public).
+- Filtrer le catalogue par :
+  - nom (recherche)
+  - prix (min/max)
+  - catégorie (multi-sélection)
+  - possédé (dans le cas d'une vue utilisateur) - filtre côté serveur pour les vues personnalisées
+  - taille (bornes en Mo)
+- Consulter la liste de toutes les catégories avec leurs descriptions et visuels.
 
-Stocker un ensemble de jeux consistant en :
- - Une liste des jeux accessibles
- - Une liste des jeux achetés
- - Une liste de genres permettant de caractériser les jeux
-
-Sachant que :
-
-- Un jeu contient au minimum :
-  - Un Id
-  - Un nom
-  - Une description
-  - Un payload (binaire du jeu)
-  - Un prix
-  - Des catégories (Un jeu peut avoir plusieurs catégories)
-
-- Un utilisateur contient au minimum :
-  - Un Id
-  - Un nom
-  - Un prénom
-  - Une liste des jeux achetées
-
-## administration
-
-Un administrateur doit pouvoir :
- - Ajouter des jeux
- - Supprimer des jeux
- - Modifier un jeu
- - Ajouter de nouvelles catégories
- - Modifier une catégorie
- - Supprimer une catégorie
-
-Un utilisateur doit pouvoir :
- - Consulter la liste des jeux possédés
- - Acheter un nouveau jeu
- - Voir les jeux possédés
- - Consulter la liste des autres joueurs inscrits et leurs statuts en temps réel
-
-Tout le monde peut :
- - Consulter la liste de tous les jeux
-   - Filtrer par nom / prix / catégorie / possédé / taille
- - Consulter la liste de toutes les catégories
+Les listes publiques supportent pagination, tri et/ou filtres côté serveur afin d'optimiser la charge et permettre des requêtes efficaces.
 
 ### Options
 
-- Afficher des filtres dans la liste des jeux pour filtrer par catégorie / prix / possédé.
-- Une page affichant les statistiques sur :
-  - Le nombre total de jeux disponibles
-  - Le nombre de jeux par catégorie
-  - Le nombre moyen de jeux joués par compte
-  - Le temps moyen joué par jeu
-  - Le maximum de joueurs en simultané sur la plateforme et par jeu
-- Un jeu pouvant faire plusieurs Gio, il est nécessaire de pouvoir les stocker sur autre chose qu’une base de données classique. Trouver et mettre en place un mécanisme pour stocker les jeux hors de la BDD.
-- En suivant le même principe, il est nécessaire de ne pas stocker l’ensemble du fichier en mémoire avant de l’envoyer. Streamer le binaire en direct pour réduire l’empreinte mémoire de votre serveur.
+- Afficher des filtres directement dans l'interface des jeux (catégorie / prix / possédé) pour une expérience admin/éditeur plus fluide.
+- Stockage des binaires hors de la base de données :
+  - Les binaires (jeux ZIP, payloads) sont stockés sur le disque du serveur (`wwwroot/uploads` par défaut), avec un chemin ou URL conservé en base.
+  - Lors de l'upload, les fichiers sont streamés directement vers le stockage (pas de chargement complet en mémoire) pour supporter des fichiers de plusieurs Gio.
+- Téléchargement / distribution :
+  - Le serveur stream les fichiers aux clients (utilisation d'un FileStreamResult / Stream) - évite d'allouer la mémoire pour tout le binaire.
 
-Au lieu d’afficher la liste de tous les joueurs, faites en sorte que chaque joueur ait une liste d’amis.
+---
 
-## API
+## Technologies & outils
 
-Une API REST doit être mise à disposition pour permettre à des clients externes de consulter la librairie.
+- Client Windows : .NET MAUI (10.0), CommunityToolkit.Mvvm, WebView, HttpClient.
+- Serveur : ASP.NET Core, Entity Framework Core, PostgreSQL, ASP.NET Identity (JWT Bearer tokens).
+- Communication : API REST JSON, streaming pour les binaires.
 
-Cette API doit permettre de :
+---
 
-- S’authentifier
-- Récupérer le binaire d’un jeu et le copier localement (/ ! \\ Un jeu pouvant faire plusieurs Gio, il est impensable de stocker l’ensemble du binaire en mémoire)
-- Lister les catégories disponibles (tout le monde)
-- Lister les jeux (incluant filtre + pagination) (tout le monde)
-  - `/game`
-  - `/game?offset=10&limit=15`
-  - `/game?category=3`
-  - `/game?category[]=3&category[]=4`
-  - `/game?offset=10&limit=15&category[]=3`
-  - `/game?offset=10&limit=15&category[]=3&category[]=2`
-- Lister les jeux possédés (incluant filtre + pagination) (joueur connecté uniquement)
-  - `/game`
-  - `/game?offset=10&limit=15`
-  - `/game?category=3`
-  - `/game?category[]=3&category[]=4`
-  - `/game?offset=10&limit=15&category[]=3`
-  - `/game?offset=10&limit=15&category[]=3&category[]=2`
+## Comptes de test
 
-La liste des jeux et la liste de mes jeux peuvent être factorisées en une seule API.
+- Utilisateur standard (joueur) :
+  - Email : `test@test.com`
+  - Mot de passe : `password`
+- Administrateur (interface web seulement) :
+  - Email : `admin@gauniv.com`
+  - Mot de passe : `admin123`
 
+---
 
-# Application (WPF, MAUI, WINUI)
+## How to run (exécution rapide)
 
-L’application doit pouvoir permettre de :
+1. Restaurer et builder la solution :
 
-- Lister les jeux (vous pouvez définir la limite comme bon vous semble)
-  - Incluant la pagination (scroll infini, bouton ou autres)
-  - Filtrer par jeux possédés / catégorie / prix / …
-- Lister les jeux possédés par le joueur (vous pouvez définir la limite comme bon vous semble)
-  - Incluant la pagination (scroll infini, bouton ou autres)
-  - Filtrer par jeux possédés / catégorie / prix / …
-- Afficher les détails d’un jeu (nom, description, statuts, catégories)
-- Télécharger, supprimer et lancer un jeu
-  - L’utilisateur ne devra pas voir les boutons "jouer" et "supprimer" si le jeu n’a pas été téléchargé
-  - De même, le bouton "télécharger" ne sera pas visible si le jeu est déjà disponible
-- Jouer à un jeu
-  - Visualiser l’état du jeu (non téléchargé, prêt, en jeu, …)
-  - Contrôler le jeu (lancement, arrêt forcé, …)
-- Voir et mettre à jour son profil d’application (dossier d’installation, identifiants, …)
+```bash
+cd /Users/Clicar/Mamitiana/cours/Dotnet/projectGame/Projet.NET
+dotnet restore
+dotnet build Gauniv.sln
+```
 
-L’ensemble des données concernant les jeux devra provenir du serveur.
+2. Lancer le serveur web :
 
+```bash
+cd Gauniv.WebServer
+dotnet run
+```
 
-## Options
+3. Lancer le client (MAUI/WPF selon configuration) :
 
-- Afficher la description avec un formatage : style de police, couleur, taille du texte, ...
-  - Penser au RTF, HTML, PDF, ...
-  - Dans un premier temps, gérez uniquement un format. Si vous avez fini, vous pouvez gérer plusieurs formats en même temps
-- Lire la description grâce à l'API [System.Speech.SpeechSynthesizer](https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer?view=net-9.0)
-  - Gérer la lecture / l'arrêt / la pause / la reprise
-  - Changer les boutons de contrôle en fonction de l'état de la lecture (comme un lecteur vidéo, ex : YouTube)
-  - Commencer à lire à partir de la sélection de l'utilisateur. L'utilisateur doit pouvoir faire un clic droit sur un mot et lancer la lecture à partir de ce mot
+```bash
+cd Gauniv.Client
+dotnet run
+```
 
+### Base de données PostgreSQL (Docker)
 
-# Serveur de jeu (Console)
+Le projet inclut un fichier Docker Compose pour démarrer une instance PostgreSQL locale. Pour lancer la base de données (en arrière-plan) depuis la racine du dépôt, exécute :
 
-Le serveur est une application console qui coordonne tous les joueurs.
+```bash
+# Démarrer PostgreSQL via docker-compose (fichier fourni : docker-compose-db.yml)
+docker-compose -f docker-compose-db.yml up -d
+```
 
-La communication entre les joueurs et le serveur se fait en TCP.
+Une fois PostgreSQL démarré et accessible, exécute les migrations EF Core (depuis le dossier `Gauniv.WebServer`) pour créer/mettre à jour la base :
 
-Pour simplifier la communication, je conseille l’utilisation de MessagePack ou autre (Protobuff, Thrift, Cap’n Proto, ...).
+```bash
+cd Gauniv.WebServer
+# applique les migrations et crée la base (nécessite dotnet-ef)
+dotnet ef database update
+```
 
+---
 
-## Deroulement d’une partie
+## Points forts
 
-Le jeu se joue sur un damier N*N.
+- Architecture MVVM propre côté client, séparation des responsabilités.
+- UX soignée : thème sombre inspiré de Steam, feedbacks, boutons conditionnels.
+- Performance : pagination, filtres côté client, streaming des binaires.
+- Sécurité : tokens Bearer, restriction admin sur le client.
 
-1. Le serveur attend que tous les joueurs soient prêts pour commencer la partie.
-2. Le serveur décide du MJ et avertit tous les participants de leurs rôles.
-3. Le MJ décide d'une case et valide son choix.
-4. Les joueurs reçoivent le top départ.
-5. Chaque joueur clique le plus vite possible sur la case choisie par le MJ.
-6. Le serveur définit l'ordre final des joueurs grâce au temps de réaction de chaque joueur.
-7. Pour chaque joueur, le serveur vérifie que la participation du joueur est valide grâce à la fonction ci-dessous. Si le joueur est exclu, la position de tous les joueurs doit être mise à jour en conséquence.
-8. Le serveur communique le résultat final à tout le monde.
+---
 
-## Le joueur
+## Remarques
 
-- Un joueur doit être authentifié par login / mot de passe auprès du serveur d’identification.
-  - Le serveur d’authentification doit retourner un token prouvant l’authentification.
-- Un joueur est composé d’un nom et d’un token d’authentification.
+- La partie serveur de jeu (Gauniv.GameServer) et le jeu (Gauniv.Game) n'ont pas été développés dans ce dépôt.
 
-## Option
-
-- Le serveur sait gérer plusieurs parties en même temps (et donc il sait gérer des salons).
-- Séparer la partie serveur de la partie jeu :
-  - Le serveur est générique et charge des plugins, chaque plugin est un jeu.
-  - Le serveur peut gérer plusieurs jeux en même temps.
-  - On peut rajouter un jeu sans redémarrer le serveur.
-- Lancer plusieurs serveurs en même temps pour augmenter la capacité maximale de joueurs :
-  - Un joueur peut se connecter à n'importe quel serveur et jouer à n'importe quelle partie.
-  - Si le serveur ne sait gérer qu'une partie à la fois, alors tous les joueurs de tous les serveurs rejoignent la même partie en même temps.
-  - Si le serveur sait gérer plusieurs parties à la fois, alors le joueur peut choisir la partie à rejoindre quel que soit son serveur d'origine.
-
-
-# Jeu (Godot, UNITY, Winform, Console, …)
-
-
-Le jeu doit mettre en place les IHM permettant aux joueurs de jouer
-
-### Commun
-
-1. Entrer des identifiant de connexion
-2. Sélection du nom
-3. Ready check
-
-# MJ ou #JOUEUR
-
-1. Attente des autres joueurs
-2. Affichage des résultats
-
-### MJ
-
-1. Sélection d’une case
-2. Validation de la case sélectionné ou changement (ref #4)
-
-### Joueur
-
-1. Attente du choix du MJ
-2. Affichage de la case sélectionné par le MJ
-3. Clic !
-
-## Option
-
-- Ajout d’un temp maximal pour cliquer
-- Géré les joueurs dans la liste d’ami avec le statut correspondant
-- Remplacer le damier par une map créer par le MJ
+---

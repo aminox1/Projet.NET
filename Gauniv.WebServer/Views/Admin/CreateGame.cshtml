@@ -1,0 +1,82 @@
+@model Gauniv.WebServer.Dtos.CreateGameDto
+
+@{
+    ViewData["Title"] = "Créer un jeu";
+    var categories = ViewBag.Categories as List<Gauniv.WebServer.Data.Category>;
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Créer un nouveau jeu</h1>
+
+    <form asp-action="CreateGame" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Nom du jeu</label>
+            <input asp-for="Name" class="form-control" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="5" required></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Price" class="form-label">Prix (€)</label>
+            <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" required />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Catégories</label>
+            <div>
+                @if (categories != null && categories.Any())
+                {
+                    foreach (var category in categories)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="CategoryIds" value="@category.Id" id="category_@category.Id">
+                            <label class="form-check-label" for="category_@category.Id">
+                                @category.Name
+                            </label>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">Aucune catégorie disponible. <a asp-action="CreateCategory">Créer une catégorie</a>.</p>
+                }
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Binaire du jeu (ZIP)</label>
+            <input type="file" name="payload" class="form-control" accept=".zip" required />
+            <div class="alert alert-info mt-2">
+                <i class="bi bi-info-circle"></i> 
+                <strong>Instructions d'upload :</strong>
+                <ul class="mb-0">
+                    <li>Téléversez un fichier ZIP contenant votre jeu</li>
+                    <li>Le ZIP doit contenir un fichier .bat ou .exe pour lancer le jeu</li>
+                    <li>Exemple : un petit jeu comme Snake, Morpion, etc.</li>
+                    <li>Le ZIP sera stocké et streamé aux utilisateurs lors du téléchargement</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Créer le jeu
+            </button>
+            <a asp-action="Games" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -32,15 +32,71 @@ Please respect the team's standards for any future contribution
              xmlns:vm="clr-namespace:Gauniv.Client.ViewModel"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Gauniv.Client.Pages.GameDetails"
-             Title="GameDetails"
-             BindingContext="{vm:GameDetailsViewModel}"
+             Title="{Binding Game.Name, FallbackValue='Game Details'}"
              x:DataType="vm:GameDetailsViewModel">
-    <Label Text="Game details" />
-    <!-- 
-    On veut afficher le detail d'un jeu: nom, description
-    si il est possédé
-    - si oui
-        si il est en cours de téléchargement, si il est en cours de jeu, si il est installé
-    - si non le prix et la possibilité d'achat
-    -->
+    
+    <Grid Padding="20">
+        <ActivityIndicator IsRunning="{Binding IsLoading}" 
+                          IsVisible="{Binding IsLoading}"
+                          VerticalOptions="Center"
+                          HorizontalOptions="Center"/>
+        
+        <ScrollView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+            <VerticalStackLayout Spacing="20">
+               
+                <Button Text="← Back" 
+                        Command="{Binding GoBackCommand}"
+                        HorizontalOptions="Start"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}"/>
+               
+                <Frame Padding="15" CornerRadius="10" HasShadow="True">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{Binding Game.Name}" 
+                               FontSize="24" 
+                               FontAttributes="Bold"/>
+                        
+                        <WebView HeightRequest="300"
+                                 Source="{Binding Game.Description, Converter={StaticResource HtmlToWebViewSourceConverter}}"
+                                 BackgroundColor="#1B2838"/>
+                        
+                        <Label Text="{Binding Game.Categories, Converter={StaticResource ListToStringConverter}}"
+                               FontSize="14"
+                               TextColor="{StaticResource Primary}"/>
+                        
+                        <Label Text="{Binding Game.Price, StringFormat='${0:F2}'}"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="Green"
+                               IsVisible="{Binding Game.IsOwned, Converter={StaticResource InvertedBoolConverter}}"/>
+                        
+                        <Label Text="OWNED" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="Green"
+                               IsVisible="{Binding Game.IsOwned}"/>
+                    </VerticalStackLayout>
+                </Frame>
+                
+                <VerticalStackLayout Spacing="10">
+                    <Button Text="Purchase Game" 
+                            Command="{Binding PurchaseGameCommand}"
+                            IsVisible="{Binding Game.IsOwned, Converter={StaticResource InvertedBoolConverter}}"
+                            BackgroundColor="{StaticResource Primary}"/>
+                    
+                    <Label Text="✓ Downloaded" 
+                           FontSize="16"
+                           TextColor="Green"
+                           IsVisible="{Binding Game.IsDownloaded}"
+                           HorizontalOptions="Center"/>
+                    
+                    <Label Text="● Running" 
+                           FontSize="16"
+                           TextColor="Orange"
+                           IsVisible="{Binding Game.IsRunning}"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

@@ -26,12 +26,28 @@
 // 
 // Please respect the team's standards for any future contribution
 #endregion
+using Gauniv.Client.ViewModel;
+
 namespace Gauniv.Client.Pages;
 
 public partial class Index : ContentPage
 {
+	private IndexViewModel? viewModel;
+
 	public Index()
 	{
 		InitializeComponent();
+		viewModel = new IndexViewModel();
+		BindingContext = viewModel;
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		
+		if (viewModel != null)
+		{
+			await viewModel.LoadGamesCommand.ExecuteAsync(null);
+		}
 	}
 }

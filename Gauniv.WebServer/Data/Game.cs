@@ -38,5 +38,30 @@ namespace Gauniv.WebServer.Data
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public int Id { get; set; }
+        
+        [Required]
+        [MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+        
+        [Required]
+        [MaxLength(2000)]
+        public string Description { get; set; } = string.Empty;
+        
+        [Required]
+        public decimal Price { get; set; }
+        
+        // Path to the game binary file
+        public string? PayloadPath { get; set; }
+        
+        // Size in bytes
+        public long? Size { get; set; }
+        
+        // Navigation properties
+        public ICollection<Category> Categories { get; set; } = new List<Category>();
+        
+        public ICollection<User> Owners { get; set; } = new List<User>();
+
+        // Images for the game (one-to-many)
+        public ICollection<GameImage> Images { get; set; } = new List<GameImage>();
     }
 }

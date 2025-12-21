@@ -1,0 +1,95 @@
+@model Gauniv.WebServer.ViewModels.GamesListViewModel
+
+@{
+    ViewData["Title"] = "Gestion des jeux";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestion des jeux</h1>
+        <div>
+            <a asp-action="CreateGame" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Ajouter un jeu
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à l'administration
+            </a>
+        </div>
+    </div>
+
+    @{ ViewData["BaseUrl"] = Url.Action("Games", "Admin"); }
+    @await Html.PartialAsync("~/Views/Shared/_GamesFilters.cshtml", Model)
+
+    <div class="table-responsive mt-3">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Prix</th>
+                    <th>Taille</th>
+                    <th>Catégories</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var game in Model.Items)
+                {
+                    <tr>
+                        <td>@game.Id</td>
+                        <td>@game.Name</td>
+                        <td>€@game.Price.ToString("F2")</td>
+                        <td>@(game.Size > 0 ? $"{Math.Round(game.Size / (1024.0 * 1024.0), 1).ToString(System.Globalization.CultureInfo.CurrentCulture)} Mo" : "N/D")</td>
+                        <td>
+                            @string.Join(", ", game.Categories)
+                        </td>
+                        <td>
+                            <a asp-action="EditGame" asp-route-id="@game.Id" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+                            <form asp-action="DeleteGame" asp-route-id="@game.Id" method="post" class="d-inline" 
+                                  onsubmit="return confirm('Voulez-vous vraiment supprimer ce jeu ?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Aucun jeu disponible. Cliquez sur "Ajouter un jeu" pour en créer un.
+        </div>
+    }
+
+    <nav aria-label="Navigation des pages">
+        <ul class="pagination">
+            @{
+                var totalPages = (int)Math.Ceiling((double)Model.TotalCount / (Model.PageSize > 0 ? Model.PageSize : 10));
+                var current = Model.Page <= 0 ? 1 : Model.Page;
+                if (current > totalPages) current = totalPages;
+            }
+
+            <li class="page-item @(current == 1 ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Games", new { page = current - 1, pageSize = Model.PageSize, name = Model.Name, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, category = Model.Category?.Split(',', StringSplitOptions.RemoveEmptyEntries), isOwned = Model.IsOwned, minSize = Model.MinSize, maxSize = Model.MaxSize })">Précédent</a>
+            </li>
+
+            @for (int p = 1; p <= totalPages; p++)
+            {
+                <li class="page-item @(p == current ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Games", new { page = p, pageSize = Model.PageSize, name = Model.Name, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, category = Model.Category?.Split(',', StringSplitOptions.RemoveEmptyEntries), isOwned = Model.IsOwned, minSize = Model.MinSize, maxSize = Model.MaxSize })">@p</a>
+                </li>
+            }
+
+            <li class="page-item @(current == totalPages ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Games", new { page = current + 1, pageSize = Model.PageSize, name = Model.Name, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, category = Model.Category?.Split(',', StringSplitOptions.RemoveEmptyEntries), isOwned = Model.IsOwned, minSize = Model.MinSize, maxSize = Model.MaxSize })">Suivant</a>
+            </li>
+        </ul>
+    </nav>
+</div>

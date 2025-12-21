@@ -9,18 +9,18 @@ services:
         build:
             context: .
             dockerfile: Gauniv.WebServer/Dockerfile
+        # volumes:
+         #   - ./Gauniv.WebServer:/src/Gauniv.WebServer   # monte le code source
+        # working_dir: /src/Gauniv.WebServer
+        # command: bash -c "dotnet tool install --global dotnet-watch --version 10.0.0 --ignore-failed-sources || true; export PATH=/root/.dotnet/tools:$PATH; dotnet watch run --urls http://+:80"
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
           - ASPNETCORE_HTTP_PORTS=80
-          - ASPNETCORE_HTTPS_PORTS=443
-          - ConnectionStrings:DefaultConnection=Server=postgres_primary;Port=5432;Database=db;Username=admin;Password=password
-          # - ConnectionStrings:redis=redis-sentinel:26379,serviceName=mymaster,password=redis
+          - ASPNETCORE_URLS=http://+:80
+          - ConnectionStrings__DefaultConnection=Host=postgres_primary;Port=5432;Database=db;Username=admin;Password=password
         ports:
           - "80"
           - "443"
-        volumes:
-          - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-          - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
     nginx:
         image: nginx:latest
         volumes:

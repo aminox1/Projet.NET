@@ -26,12 +26,24 @@
 // 
 // Please respect the team's standards for any future contribution
 #endregion
+using Gauniv.Client.ViewModel;
+
 namespace Gauniv.Client.Pages;
 
 public partial class MyGames : ContentPage
 {
+	private MyGamesViewModel? viewModel;
+	
 	public MyGames()
 	{
 		InitializeComponent();
+		viewModel = new MyGamesViewModel();
+		BindingContext = viewModel;
+	}
+	
+	protected override void OnAppearing()
+	{
+		base.OnAppearing();
+		viewModel?.LoadMyGamesCommand.Execute(null);
 	}
 }

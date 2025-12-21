@@ -30,24 +30,210 @@ Please respect the team's standards for any future contribution
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Gauniv.Client.ViewModel"
+             xmlns:models="clr-namespace:Gauniv.Client.Models"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              x:Class="Gauniv.Client.Pages.Index"
-             Title="Index"
+             Title="All Games"
              x:DataType="vm:IndexViewModel"
-             BindingContext="{vm:IndexViewModel}">
-    <!-- 
-            A vous de créer la liste avec le bon binding. Une <ListBox>, une <CollectionView> ou autre fera l'affaire 
-            La propriété ItemsSource doit pointé vers la propiété Books de votre dataContext actuelle 
-            Utilisé ListBox.ItemTemplate pour définir comment sont affiché vos items
-            <ListBox.ItemTemplate>
+             BackgroundColor="#1B2838">
+    
+    <Grid RowDefinitions="Auto,Auto,*" Padding="15">
+        <SearchBar Grid.Row="0"
+                   Placeholder="Search your library..."
+                   Text="{Binding SearchText}"
+                   PlaceholderColor="#8F98A0"
+                   TextColor="White"
+                   BackgroundColor="#2A475E"
+                   Margin="0,0,0,15"/>
         
-            A vous de faire afficher les champs que vous voulez afficher pour savoir quel sont les livre disponible
-            <xxx Text="{Binding MyPropertyOnMyObjectBook}"/>
-            N'oublier pas non plus de rajouter un boutton (ou une autre technique) quelque part pour allez voir les détails de votre livre
-            Les propriété Command et CommandParameter pourrons vous aider ! 
-            Command="{Binding DataContext.ItemSelectedCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}}" 
-            CommandParameter="{Binding .}"
-    -->
-    <Label Text="List des jeux" />
+        <Border Grid.Row="1" 
+                StrokeThickness="1" 
+                Stroke="#2A475E" 
+                Padding="15"
+                BackgroundColor="#16202D"
+                StrokeShape="RoundRectangle 8"
+                Margin="0,0,0,15">
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*,*" RowSpacing="12" ColumnSpacing="12">
+                
+                <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="5">
+                    <Label Text="CATEGORY" FontSize="11" FontAttributes="Bold" TextColor="#66C0F4"/>
+                    <Picker ItemsSource="{Binding Categories}"
+                            SelectedItem="{Binding SelectedCategory}"
+                            ItemDisplayBinding="{Binding Name}"
+                            FontSize="13"
+                            TextColor="White"
+                            BackgroundColor="#2A475E"/>
+                </VerticalStackLayout>
+                
+                <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="5">
+                    <Label Text="MIN PRICE" FontSize="11" FontAttributes="Bold" TextColor="#66C0F4"/>
+                    <Entry Text="{Binding MinPrice}" 
+                           Placeholder="0.00" 
+                           PlaceholderColor="#8F98A0"
+                           Keyboard="Numeric"
+                           FontSize="13"
+                           TextColor="White"
+                           BackgroundColor="#2A475E"/>
+                </VerticalStackLayout>
+                
+                <VerticalStackLayout Grid.Row="0" Grid.Column="2" Spacing="5">
+                    <Label Text=" MAX PRICE" FontSize="11" FontAttributes="Bold" TextColor="#66C0F4"/>
+                    <Entry Text="{Binding MaxPrice}" 
+                           Placeholder="999.99" 
+                           PlaceholderColor="#8F98A0"
+                           Keyboard="Numeric"
+                           FontSize="13"
+                           TextColor="White"
+                           BackgroundColor="#2A475E"/>
+                </VerticalStackLayout>
+                
+                <VerticalStackLayout Grid.Row="0" Grid.Column="3" Spacing="5">
+                    <Label Text=" " FontSize="11"/>
+                    <Button Text=" CLEAR"
+                            Command="{Binding ClearFiltersCommand}"
+                            BackgroundColor="#417A9B"
+                            TextColor="White"
+                            FontSize="12"
+                            FontAttributes="Bold"
+                            CornerRadius="3"/>
+                </VerticalStackLayout>
+                
+                <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="15">
+                    <Border Padding="12,6" 
+                            BackgroundColor="#2A475E"
+                            StrokeThickness="1"
+                            Stroke="#5C9F3F"
+                            StrokeShape="RoundRectangle 3">
+                        <HorizontalStackLayout Spacing="8">
+                            <CheckBox IsChecked="{Binding ShowOwnedOnly}" 
+                                      Color="#5C9F3F"/>
+                            <Label Text=" OWNED GAMES" 
+                                   VerticalOptions="Center"
+                                   TextColor="#5C9F3F"
+                                   FontSize="12"
+                                   FontAttributes="Bold"/>
+                        </HorizontalStackLayout>
+                    </Border>
+                    
+                    <Border Padding="12,6" 
+                            BackgroundColor="#2A475E"
+                            StrokeThickness="1"
+                            Stroke="#FFA500"
+                            StrokeShape="RoundRectangle 3">
+                        <HorizontalStackLayout Spacing="8">
+                            <CheckBox IsChecked="{Binding ShowNotOwnedOnly}" 
+                                      Color="#FFA500"/>
+                            <Label Text=" NOT OWNED" 
+                                   VerticalOptions="Center"
+                                   TextColor="#FFA500"
+                                   FontSize="12"
+                                   FontAttributes="Bold"/>
+                        </HorizontalStackLayout>
+                    </Border>
+                </HorizontalStackLayout>
+                
+            </Grid>
+        </Border>
+
+        <RefreshView Grid.Row="2" 
+                     IsRefreshing="{Binding IsLoading}"
+                     Command="{Binding LoadGamesCommand}">
+            <CollectionView ItemsSource="{Binding Games}"
+                           SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="No games available" 
+                               FontSize="18" 
+                               HorizontalTextAlignment="Center"
+                               TextColor="Gray"/>
+                        <Label Text="Pull down to refresh" 
+                               FontSize="14" 
+                               HorizontalTextAlignment="Center"
+                               TextColor="Gray"
+                               Margin="0,10,0,0"/>
+                    </StackLayout>
+                </CollectionView.EmptyView>
+                
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:GameDto">
+                        <Frame Margin="0,8" 
+                               Padding="0" 
+                               BorderColor="#2A475E"
+                               CornerRadius="4"
+                               BackgroundColor="#16202D"
+                               HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:IndexViewModel}}, Path=GameSelectedCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Frame.GestureRecognizers>
+                            
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" Padding="15">
+                            
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="White"/>
+                                
+                             
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding Price, StringFormat='${0:F2}'}"
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="#BEDB39"
+                                       VerticalOptions="Center"/>
+                                
+                                
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Description, Converter={StaticResource StripHtmlConverter}}"
+                                       FontSize="13"
+                                       TextColor="#8F98A0"
+                                       MaxLines="2"
+                                       LineBreakMode="TailTruncation"
+                                       Margin="0,8,0,0"/>
+                                
+                               
+                                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                       FontSize="12"
+                                       TextColor="DarkBlue"
+                                       Margin="0,5,0,0">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="Categories: "/>
+                                            <Span Text="{Binding Categories, Converter={StaticResource ListToStringConverter}}"/>
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                
+                                
+                                <HorizontalStackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                                      Spacing="10"
+                                                      Margin="0,10,0,0">
+                                    <Button Text="View Details"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:IndexViewModel}}, Path=GameSelectedCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Blue"
+                                            TextColor="White"/>
+                                    
+                                    <Button Text="{Binding IsOwned, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Owned|Purchase'}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:IndexViewModel}}, Path=PurchaseGameCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{Binding IsOwned, Converter={StaticResource BoolToColorConverter}}"
+                                            TextColor="White"
+                                            IsEnabled="{Binding IsOwned, Converter={StaticResource InvertedBoolConverter}}"/>
+                                    
+                                    <Label Text="✓ Owned" 
+                                           TextColor="Green"
+                                           FontAttributes="Bold"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding IsOwned}"/>
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
 </ContentPage>

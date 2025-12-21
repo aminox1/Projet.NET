@@ -39,5 +39,59 @@ namespace Gauniv.WebServer.Dtos
     public class GameDto
     {
         public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public long? Size { get; set; }
+        public List<CategoryDto> Categories { get; set; } = new();
+        public bool IsOwned { get; set; }
+    }
+    
+    public class CategoryDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
+    
+    public class CreateGameDto
+    {
+        [Required]
+        [MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+        
+        [Required]
+        [MaxLength(2000)]
+        public string Description { get; set; } = string.Empty;
+        
+        [Required]
+        [Range(0, double.MaxValue)]
+        public decimal Price { get; set; }
+        
+        public List<int> CategoryIds { get; set; } = new();
+    }
+    
+    public class UpdateGameDto
+    {
+        [MaxLength(200)]
+        public string? Name { get; set; }
+        
+        [MaxLength(2000)]
+        public string? Description { get; set; }
+        
+        [Range(0, double.MaxValue)]
+        public decimal? Price { get; set; }
+        
+        public List<int>? CategoryIds { get; set; }
+    }
+    
+    public class CreateCategoryDto
+    {
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; } = string.Empty;
+        
+        [MaxLength(500)]
+        public string? Description { get; set; }
     }
 }
