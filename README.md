@@ -1,4 +1,4 @@
-# Gauniv — Plateforme de distribution de jeux
+# Gauniv - Plateforme de distribution de jeux
 
 Ce dépôt contient la solution Gauniv : un serveur web (API + interface d'administration et d'achat de jeux) et une application cliente Windows (MAUI) permettant de parcourir, acheter, télécharger et lancer des jeux.
 
@@ -84,7 +84,7 @@ Résumé des fonctionnalités implémentées côté client (détaillé fourni pa
 - Authentification : formulaire email/password.
 - Affichage de l'email connecté, bouton de déconnexion.
 - Gestion du token Bearer (persisté selon configuration).
-- Restriction admin : détection des tentatives de connexion admin côté client et blocage côté serveur (HTTP 403) — message explicite et directive vers l'interface web.
+- Restriction admin : détection des tentatives de connexion admin côté client et blocage côté serveur (HTTP 403) -message explicite et directive vers l'interface web.
 
 ### Game Details
 
@@ -106,13 +106,13 @@ Le serveur (ASP.NET Core) expose les endpoints utilisés par le client :
 
 ### Endpoints principaux utilisés
 
-- `GET /api/1.0.0/Games/List` — liste paginée avec filtres (nom, catégories, prix, possédé, taille).
-- `GET /api/1.0.0/Games/MyGames` — jeux possédés (auth requis), pagination.
-- `GET /api/1.0.0/Games/Categories` — toutes les catégories.
-- `GET /api/1.0.0/Games/Details/{id}` — détails d’un jeu.
-- `GET /api/1.0.0/Games/Download/{id}` — téléchargement du binaire (streaming, ne charge pas tout en mémoire).
-- `POST /api/1.0.0/Games/Purchase/{id}` — achat d’un jeu.
-- `POST /Bearer/login` — authentification (renvoie token Bearer).
+- `GET /api/1.0.0/Games/List` - liste paginée avec filtres (nom, catégories, prix, possédé, taille).
+- `GET /api/1.0.0/Games/MyGames` - jeux possédés (auth requis), pagination.
+- `GET /api/1.0.0/Games/Categories` - toutes les catégories.
+- `GET /api/1.0.0/Games/Details/{id}` - détails d’un jeu.
+- `GET /api/1.0.0/Games/Download/{id}` - téléchargement du binaire (streaming, ne charge pas tout en mémoire).
+- `POST /api/1.0.0/Games/Purchase/{id}` - achat d’un jeu.
+- `POST /Bearer/login` -authentification (renvoie token Bearer).
 
 ### Sécurité & restriction admin
 
