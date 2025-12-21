@@ -147,10 +147,22 @@ app.MapGroup("Bearer").MapPost("/login", async Task<Results<Ok<AccessTokenRespon
             ([FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
         {
             var signInManager = sp.GetRequiredService<SignInManager<User>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
 
             var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
             var isPersistent = (useCookies == true) && (useSessionCookies != true);
             signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+
+            // Check if user exists and is an admin
+            var user = await userManager.FindByEmailAsync(login.Email);
+            if (user != null)
+            {
+                var isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+                if (isAdmin)
+                {
+                    return TypedResults.Problem("Admin accounts cannot login to the client application. Please use the web interface.", statusCode: StatusCodes.Status403Forbidden);
+                }
+            }
 
             var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
 
