@@ -95,7 +95,8 @@ namespace Gauniv.WebServer.Services
             long? minSize = null,
             long? maxSize = null,
             int page = 1,
-            int pageSize = 10)
+            int pageSize = 10,
+            bool orderById = false)
         {
             var query = _db.Games
                 .Include(g => g.Categories)
@@ -141,8 +142,9 @@ namespace Gauniv.WebServer.Services
 
             var total = await query.CountAsync();
 
-            var games = await query
-                .OrderBy(g => g.Name)
+            var orderedQuery = orderById ? query.OrderBy(g => g.Id) : query.OrderBy(g => g.Name);
+
+            var games = await orderedQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

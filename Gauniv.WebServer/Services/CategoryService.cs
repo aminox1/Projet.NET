@@ -12,7 +12,7 @@ namespace Gauniv.WebServer.Services
             _db = db;
         }
 
-        public async Task<CategoryListViewModel> GetPagedAsync(int page, int pageSize, string? search, int[]? categoryIds)
+        public async Task<CategoryListViewModel> GetPagedAsync(int page, int pageSize, string? search, int[]? categoryIds, bool orderById = false)
         {
             var query = _db.Categories.AsQueryable();
 
@@ -28,20 +28,22 @@ namespace Gauniv.WebServer.Services
 
             var total = await query.CountAsync();
 
-            var items = await query
+            var ordered = orderById
+                ? query.OrderBy(c => c.Id)
+                : query.OrderByDescending(c => c.Games.Count).ThenBy(c => c.Name);
+
+            var items = await ordered
                 .Include(c => c.Games)
-                .OrderByDescending(c => c.Games.Count)
-                .ThenBy(c => c.Name)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            var allCats = await _db.Categories.OrderBy(c => c.Name).ToListAsync();
+            var allCats = await _db.Categories.Include(c => c.Games).OrderBy(c => c.Name).ToListAsync();
 
             var vm = new CategoryListViewModel
             {
-                Items = items.Select(c => new CategoryViewModel { Id = c.Id, Name = c.Name, GamesCount = c.Games?.Count ?? 0, HasImage = c.ImageData != null && c.ImageData.Length > 0 }).ToList(),
-                AllCategories = allCats.Select(c => new CategoryViewModel { Id = c.Id, Name = c.Name, GamesCount = c.Games?.Count ?? 0, HasImage = c.ImageData != null && c.ImageData.Length > 0 }).ToList(),
+                Items = items.Select(c => new CategoryViewModel { Id = c.Id, Name = c.Name, GamesCount = c.Games.Count, HasImage = c.ImageData != null && c.ImageData.Length > 0 }).ToList(),
+                AllCategories = allCats.Select(c => new CategoryViewModel { Id = c.Id, Name = c.Name, GamesCount = c.Games.Count, HasImage = c.ImageData != null && c.ImageData.Length > 0 }).ToList(),
                 SelectedCategoryIds = (categoryIds ?? Array.Empty<int>()).ToList(),
                 Page = page,
                 PageSize = pageSize,

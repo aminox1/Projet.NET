@@ -28,8 +28,8 @@
 #endregion
 using Gauniv.WebServer.Data;
 using Gauniv.WebServer.Dtos;
-using Gauniv.WebServer.Models;
 using Gauniv.WebServer.Services;
+using Gauniv.WebServer.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -38,12 +38,13 @@ using Microsoft.EntityFrameworkCore;
 namespace Gauniv.WebServer.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class AdminController(ApplicationDbContext appDbContext, UserManager<User> userManager, ImageService imageService, CategoryService categoryService) : Controller
+    public class AdminController(ApplicationDbContext appDbContext, UserManager<User> userManager, ImageService imageService, CategoryService categoryService, GameService gameService) : Controller
     {
         private readonly ApplicationDbContext appDbContext = appDbContext;
         private readonly UserManager<User> userManager = userManager;
         private readonly ImageService _imageService = imageService;
         private readonly CategoryService _categoryService = categoryService;
+        private readonly GameService _gameService = gameService;
 
         // GET: Admin/Index
         public IActionResult Index()
@@ -54,12 +55,29 @@ namespace Gauniv.WebServer.Controllers
         #region Games Management
 
         // GET: Admin/Games
-        public async Task<IActionResult> Games()
+        public async Task<IActionResult> Games(string? name, decimal? minPrice, decimal? maxPrice, string[]? category, bool? isOwned, long? minSize, long? maxSize, int page = 1, int pageSize = 10)
         {
-            var local_games = await appDbContext.Games
-                .Include(g => g.Categories)
-                .ToListAsync();
-            return View(local_games);
+            var userId = userManager.GetUserId(User);
+
+            IEnumerable<string>? cats = category;
+            var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned, minSize, maxSize, page, pageSize, orderById: true);
+
+            var vm = new GamesListViewModel
+            {
+                Items = items,
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize,
+                Name = name,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                Category = category != null ? string.Join(",", category) : null,
+                IsOwned = isOwned,
+                MinSize = minSize,
+                MaxSize = maxSize
+            };
+
+            return View(vm);
         }
 
         // GET: Admin/CreateGame
@@ -308,10 +326,10 @@ namespace Gauniv.WebServer.Controllers
         #region Categories Management
 
         // GET: Admin/Categories
-        public async Task<IActionResult> Categories()
+        public async Task<IActionResult> Categories(string? search, int page = 1, int pageSize = 12)
         {
-            var local_categories = await appDbContext.Categories.ToListAsync();
-            return View(local_categories);
+            var vm = await _categoryService.GetPagedAsync(page, pageSize, search, null, orderById: true);
+            return View(vm);
         }
 
         // GET: Admin/CreateCategory

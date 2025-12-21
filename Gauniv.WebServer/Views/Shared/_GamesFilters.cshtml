@@ -33,7 +33,6 @@
                         <div class="col-12 col-md-6">
                             <label class="form-label mb-1">Nom</label>
                             <input type="text" name="name" value="@Model.Name" class="form-control" placeholder="Rechercher un jeu" />
-                            <div class="form-text">Recherche partielle sur le titre</div>
                         </div>
 
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("User") && !hideIsOwned)
@@ -83,7 +82,7 @@
                             <i class="bi bi-funnel-fill me-1"></i> Appliquer
                         </button>
                         <a class="btn btn-outline-secondary flex-fill" href="@baseUrl">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Réinitialiser
                         </a>
                     </div>
                 </div>

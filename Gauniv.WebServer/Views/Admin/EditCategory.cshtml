@@ -1,11 +1,11 @@
 @model Gauniv.WebServer.Data.Category
 
 @{
-    ViewData["Title"] = "Edit Category";
+    ViewData["Title"] = "Modifier la catégorie";
 }
 
 <div class="container mt-4">
-    <h1 class="mb-4">Edit Category: @Model.Name</h1>
+    <h1 class="mb-4">Modifier la catégorie : @Model.Name</h1>
 
     @if (TempData["EditCategorySuccess"] != null)
     {
@@ -20,23 +20,23 @@
         @Html.AntiForgeryToken()
         
         <div class="mb-3">
-            <label asp-for="Name" class="form-label">Category Name</label>
+            <label asp-for="Name" class="form-label">Nom de la catégorie</label>
             <input asp-for="Name" class="form-control" required />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Description" class="form-label">Description (Optional)</label>
+            <label asp-for="Description" class="form-label">Description (optionnelle)</label>
             <textarea asp-for="Description" class="form-control" rows="3"></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Current image</label>
+            <label class="form-label">Image actuelle</label>
             @if (Model.ImageData != null && Model.ImageData.Length > 0)
             {
                 <div class="card" style="width:10rem;">
-                    <img src="@Url.Action("GetImage","Categories", new { id = Model.Id })" class="card-img-top" alt="Category image" style="height:8rem;object-fit:cover;" />
+                    <img src="@Url.Action("GetImage","Categories", new { id = Model.Id })" class="card-img-top" alt="Image de la catégorie" style="height:8rem;object-fit:cover;" />
                     <div class="card-body p-2">
                         <span class="small text-muted">Aperçu</span>
                     </div>
@@ -44,21 +44,21 @@
             }
             else
             {
-                <div class="text-muted">No image uploaded yet.</div>
+                <div class="text-muted">Aucune image uploadée pour le moment.</div>
             }
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Replace / Upload Image (Optional)</label>
+            <label class="form-label">Remplacer / Uploader une image (optionnel)</label>
             <input type="file" name="imageFile" accept="image/*" class="form-control" />
         </div>
 
         <div class="mt-4">
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Save Changes
+                <i class="bi bi-save"></i> Enregistrer
             </button>
             <a asp-action="Categories" class="btn btn-secondary">
-                <i class="bi bi-x-circle"></i> Cancel
+                <i class="bi bi-x-circle"></i> Annuler
             </a>
         </div>
     </form>
