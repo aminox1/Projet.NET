@@ -37,25 +37,135 @@ Please respect the team's standards for any future contribution
              x:DataType="vm:MyGamesViewModel"
              BackgroundColor="#1B2838">
     
-    <RefreshView IsRefreshing="{Binding IsLoading}"
-                 Command="{Binding LoadMyGamesCommand}"
-                 Margin="15">
-        <CollectionView ItemsSource="{Binding MyGames}"
-                       SelectionMode="None">
-            <CollectionView.EmptyView>
-                <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
-                    <Label Text=" Your library is empty" 
-                           FontSize="20" 
+    <ScrollView>
+        <VerticalStackLayout Padding="15" Spacing="15">
+            <Frame Padding="15" 
+                   CornerRadius="4" 
+                   BorderColor="#2A475E"
+                   BackgroundColor="#16202D"
+                   HasShadow="False">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text=" FILTERS" 
+                           FontSize="16" 
                            FontAttributes="Bold"
-                           HorizontalTextAlignment="Center"
-                           TextColor="#8F98A0"/>
-                    <Label Text="Visit the Store to purchase games" 
-                           FontSize="14" 
-                           HorizontalTextAlignment="Center"
-                           TextColor="#66C0F4"
-                           Margin="0,10,0,0"/>
-                </StackLayout>
-            </CollectionView.EmptyView>
+                           TextColor="#66C0F4"/>
+                    
+                 
+                    <SearchBar Placeholder="Search by name..."
+                              PlaceholderColor="#8F98A0"
+                              Text="{Binding SearchText}"
+                              TextColor="White"
+                              BackgroundColor="#2A475E"
+                              CancelButtonColor="#66C0F4"/>
+                    
+                    <Grid ColumnDefinitions="*,*,*,Auto" 
+                          ColumnSpacing="10" 
+                          RowSpacing="10">
+                        <!-- Category -->
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text=" CATEGORY" 
+                                   FontSize="11" 
+                                   FontAttributes="Bold"
+                                   TextColor="#66C0F4"
+                                   Margin="0,0,0,5"/>
+                            <Picker ItemsSource="{Binding Categories}"
+                                   ItemDisplayBinding="{Binding Name}"
+                                   SelectedItem="{Binding SelectedCategory}"
+                                   TextColor="White"
+                                   TitleColor="#8F98A0"
+                                   BackgroundColor="#2A475E"/>
+                        </VerticalStackLayout>
+                        
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="STATUS" 
+                                   FontSize="11" 
+                                   FontAttributes="Bold"
+                                   TextColor="#66C0F4"
+                                   Margin="0,0,0,5"/>
+                        </VerticalStackLayout>
+                        
+                        <BoxView Grid.Column="2" IsVisible="False"/>
+                        
+                        <Button Grid.Column="3"
+                               Text="CLEAR"
+                               Command="{Binding ClearFiltersCommand}"
+                               BackgroundColor="#C23030"
+                               TextColor="White"
+                               FontAttributes="Bold"
+                               FontSize="11"
+                               CornerRadius="3"
+                               Padding="15,8"
+                               VerticalOptions="End"/>
+                    </Grid>
+                    
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <Frame Grid.Column="0" 
+                               Padding="10" 
+                               BorderColor="#5C9F3F" 
+                               BackgroundColor="#16202D"
+                               CornerRadius="3"
+                               HasShadow="False">
+                            <HorizontalStackLayout Spacing="8">
+                                <CheckBox IsChecked="{Binding ShowDownloadedOnly}" Color="#5C9F3F"/>
+                                <Label Text="DOWNLOADED" 
+                                       FontSize="11" 
+                                       TextColor="White"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Frame>
+                        
+                        <Frame Grid.Column="1" 
+                               Padding="10" 
+                               BorderColor="#FFA500" 
+                               BackgroundColor="#16202D"
+                               CornerRadius="3"
+                               HasShadow="False">
+                            <HorizontalStackLayout Spacing="8">
+                                <CheckBox IsChecked="{Binding ShowNotDownloadedOnly}" Color="#FFA500"/>
+                                <Label Text="NOT DOWNLOADED" 
+                                       FontSize="11" 
+                                       TextColor="White"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Frame>
+                        
+                        <Frame Grid.Column="2" 
+                               Padding="10" 
+                               BorderColor="#66C0F4" 
+                               BackgroundColor="#16202D"
+                               CornerRadius="3"
+                               HasShadow="False">
+                            <HorizontalStackLayout Spacing="8">
+                                <CheckBox IsChecked="{Binding ShowRunningOnly}" Color="#66C0F4"/>
+                                <Label Text="RUNNING NOW" 
+                                       FontSize="11" 
+                                       TextColor="White"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Frame>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Games List -->
+            <RefreshView IsRefreshing="{Binding IsLoading}"
+                         Command="{Binding LoadMyGamesCommand}">
+                <CollectionView ItemsSource="{Binding MyGames}"
+                               SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
+                            <Label Text="Your library is empty" 
+                                   FontSize="20" 
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="#8F98A0"/>
+                            <Label Text="Visit the Store to purchase games" 
+                                   FontSize="14" 
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="#66C0F4"
+                                   Margin="0,10,0,0"/>
+                        </StackLayout>
+                    </CollectionView.EmptyView>
             
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:GameDto">
@@ -81,7 +191,7 @@ Please respect the team's standards for any future contribution
                                    IsVisible="{Binding IsRunning}"/>
                             
                             <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                   Text="{Binding Description}"
+                                   Text="{Binding Description, Converter={StaticResource StripHtmlConverter}}"
                                    FontSize="13"
                                    TextColor="#8F98A0"
                                    MaxLines="2"
@@ -126,7 +236,7 @@ Please respect the team's standards for any future contribution
                                         IsVisible="{Binding IsDownloaded, Converter={StaticResource InvertedBoolConverter}}"
                                         Margin="0,0,8,8"/>
                                 
-                                <Button Text="▶ PLAY"
+                                <Button Text="PLAY"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=LaunchGameCommand}"
                                         CommandParameter="{Binding .}"
                                         BackgroundColor="#417A9B"
@@ -139,7 +249,7 @@ Please respect the team's standards for any future contribution
                                         IsEnabled="{Binding IsRunning, Converter={StaticResource InvertedBoolConverter}}"
                                         Margin="0,0,8,8"/>
                                 
-                                <Button Text="■ STOP"
+                                <Button Text="STOP"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyGamesViewModel}}, Path=StopGameCommand}"
                                         CommandParameter="{Binding .}"
                                         BackgroundColor="#FFA500"
@@ -180,4 +290,6 @@ Please respect the team's standards for any future contribution
             </CollectionView.ItemTemplate>
         </CollectionView>
     </RefreshView>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

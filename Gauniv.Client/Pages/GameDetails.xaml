@@ -43,23 +43,22 @@ Please respect the team's standards for any future contribution
         
         <ScrollView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
             <VerticalStackLayout Spacing="20">
-                <!-- Back Button -->
+               
                 <Button Text="← Back" 
                         Command="{Binding GoBackCommand}"
                         HorizontalOptions="Start"
                         BackgroundColor="Transparent"
                         TextColor="{StaticResource Primary}"/>
-                
-                <!-- Game Info -->
+               
                 <Frame Padding="15" CornerRadius="10" HasShadow="True">
                     <VerticalStackLayout Spacing="10">
                         <Label Text="{Binding Game.Name}" 
                                FontSize="24" 
                                FontAttributes="Bold"/>
                         
-                        <Label Text="{Binding Game.Description}" 
-                               FontSize="16"
-                               TextColor="Gray"/>
+                        <WebView HeightRequest="300"
+                                 Source="{Binding Game.Description, Converter={StaticResource HtmlToWebViewSourceConverter}}"
+                                 BackgroundColor="#1B2838"/>
                         
                         <Label Text="{Binding Game.Categories, Converter={StaticResource ListToStringConverter}}"
                                FontSize="14"
@@ -79,7 +78,6 @@ Please respect the team's standards for any future contribution
                     </VerticalStackLayout>
                 </Frame>
                 
-                <!-- Actions -->
                 <VerticalStackLayout Spacing="10">
                     <Button Text="Purchase Game" 
                             Command="{Binding PurchaseGameCommand}"

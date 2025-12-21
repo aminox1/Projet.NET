@@ -186,7 +186,7 @@ Please respect the team's standards for any future contribution
                                 
                                 
                                 <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                       Text="{Binding Description}"
+                                       Text="{Binding Description, Converter={StaticResource StripHtmlConverter}}"
                                        FontSize="13"
                                        TextColor="#8F98A0"
                                        MaxLines="2"

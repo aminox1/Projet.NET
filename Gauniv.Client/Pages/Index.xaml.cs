@@ -32,9 +32,22 @@ namespace Gauniv.Client.Pages;
 
 public partial class Index : ContentPage
 {
+	private IndexViewModel? viewModel;
+
 	public Index()
 	{
 		InitializeComponent();
-		BindingContext = new IndexViewModel();
+		viewModel = new IndexViewModel();
+		BindingContext = viewModel;
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		
+		if (viewModel != null)
+		{
+			await viewModel.LoadGamesCommand.ExecuteAsync(null);
+		}
 	}
 }

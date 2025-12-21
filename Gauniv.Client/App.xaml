@@ -11,12 +11,15 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             
-            <!-- Value Converters -->
+           
             <converters:BoolToTextConverter x:Key="BoolToTextConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
             <converters:ListToStringConverter x:Key="ListToStringConverter" />
+            <converters:StripHtmlConverter x:Key="StripHtmlConverter" />
+            <converters:IsHtmlConverter x:Key="IsHtmlConverter" />
+            <converters:HtmlToWebViewSourceConverter x:Key="HtmlToWebViewSourceConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

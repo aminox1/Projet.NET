@@ -21,14 +21,36 @@ namespace Gauniv.Client.ViewModel
 
         [ObservableProperty]
         private ObservableCollection<GameDto> myGames = new();
+        
+        [ObservableProperty]
+        private ObservableCollection<CategoryDto> categories = new();
+        
+        [ObservableProperty]
+        private List<GameDto> allMyGames = new();
 
         [ObservableProperty]
         private bool isLoading;
+        
+        [ObservableProperty]
+        private string searchText = string.Empty;
+        
+        [ObservableProperty]
+        private CategoryDto? selectedCategory;
+        
+        [ObservableProperty]
+        private bool showDownloadedOnly;
+        
+        [ObservableProperty]
+        private bool showNotDownloadedOnly;
+        
+        [ObservableProperty]
+        private bool showRunningOnly;
 
         public MyGamesViewModel()
         {
             gameService = new GameService();
             localGameManager = LocalGameManager.Instance;
+            _ = LoadCategoriesAsync();
             _ = LoadMyGamesAsync();
         }
 
@@ -50,11 +72,8 @@ namespace Gauniv.Client.ViewModel
                     Debug.WriteLine($"[MyGamesViewModel] Game: {game.Name}, Downloaded: {game.IsDownloaded}, Running: {game.IsRunning}");
                 }
                 
-                MyGames.Clear();
-                foreach (var game in loadedGames)
-                {
-                    MyGames.Add(game);
-                }
+                AllMyGames = loadedGames;
+                ApplyFilters();
                 
                 Debug.WriteLine($"[MyGamesViewModel] MyGames collection now has {MyGames.Count} items");
             }
@@ -194,6 +213,117 @@ namespace Gauniv.Client.ViewModel
                     await Application.Current.MainPage.DisplayAlert("Error", ex.Message, "OK");
                 }
             }
+        }
+        
+        [RelayCommand]
+        private async Task LoadCategoriesAsync()
+        {
+            try
+            {
+                Debug.WriteLine("[MyGamesViewModel] Loading categories...");
+                var loadedCategories = await gameService.GetCategoriesAsync();
+                Categories.Clear();
+                Categories.Add(new CategoryDto { Id = 0, Name = "All Categories" });
+                foreach (var category in loadedCategories)
+                {
+                    Categories.Add(category);
+                }
+                SelectedCategory = Categories.FirstOrDefault();
+                Debug.WriteLine($"[MyGamesViewModel] Loaded {Categories.Count} categories");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MyGamesViewModel] Error loading categories: {ex.Message}");
+            }
+        }
+        
+        private void ApplyFilters()
+        {
+            var filtered = AllMyGames.AsEnumerable();
+            
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                filtered = filtered.Where(g => 
+                    g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    g.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+            }
+            
+            if (SelectedCategory != null && SelectedCategory.Id != 0)
+            {
+                filtered = filtered.Where(g => g.Categories.Any(c => c.Id == SelectedCategory.Id));
+            }
+            
+            if (ShowDownloadedOnly)
+            {
+                filtered = filtered.Where(g => g.IsDownloaded);
+            }
+            if (ShowNotDownloadedOnly)
+            {
+                filtered = filtered.Where(g => !g.IsDownloaded);
+            }
+            if (ShowRunningOnly)
+            {
+                filtered = filtered.Where(g => g.IsRunning);
+            }
+            
+            filtered = filtered.OrderBy(g => g.Name);
+            
+            MyGames.Clear();
+            foreach (var game in filtered)
+            {
+                MyGames.Add(game);
+            }
+        }
+        
+        [RelayCommand]
+        private void ClearFilters()
+        {
+            SearchText = string.Empty;
+            SelectedCategory = Categories.FirstOrDefault();
+            ShowDownloadedOnly = false;
+            ShowNotDownloadedOnly = false;
+            ShowRunningOnly = false;
+            ApplyFilters();
+        }
+        
+        partial void OnSearchTextChanged(string value)
+        {
+            ApplyFilters();
+        }
+        
+        partial void OnSelectedCategoryChanged(CategoryDto? value)
+        {
+            ApplyFilters();
+        }
+        
+        partial void OnShowDownloadedOnlyChanged(bool value)
+        {
+            if (value)
+            {
+                ShowNotDownloadedOnly = false;
+                ShowRunningOnly = false;
+            }
+            ApplyFilters();
+        }
+        
+        partial void OnShowNotDownloadedOnlyChanged(bool value)
+        {
+            if (value)
+            {
+                ShowDownloadedOnly = false;
+                ShowRunningOnly = false;
+            }
+            ApplyFilters();
+        }
+        
+        partial void OnShowRunningOnlyChanged(bool value)
+        {
+            if (value)
+            {
+                ShowDownloadedOnly = false;
+                ShowNotDownloadedOnly = false;
+            }
+            ApplyFilters();
         }
     }
 }
