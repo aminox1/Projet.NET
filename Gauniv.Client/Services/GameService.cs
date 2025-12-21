@@ -239,6 +239,13 @@ namespace Gauniv.Client.Services
 
                 var response = await httpClient.PostAsJsonAsync("/Bearer/login", loginRequest);
                 
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    System.Diagnostics.Debug.WriteLine($"[GameService] Admin login blocked: {errorContent}");
+                    throw new UnauthorizedAccessException("Admin accounts cannot login to the client application.");
+                }
+                
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
@@ -250,9 +257,13 @@ namespace Gauniv.Client.Services
                     }
                 }
                 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                System.Diagnostics.Debug.WriteLine($"[GameService] Login failed: {errorContent}");
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[GameService] Login failed: {errorMsg}");
                 return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw; // Re-throw pour que ProfileViewModel puisse l'attraper
             }
             catch (Exception ex)
             {

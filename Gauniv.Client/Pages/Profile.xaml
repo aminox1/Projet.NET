@@ -126,10 +126,7 @@ Please respect the team's standards for any future contribution
                    CornerRadius="4" 
                    BorderColor="#66C0F4"
                    BackgroundColor="#2A475E">
-                <VerticalStackLayout Spacing="8">
-                    
-                    
-                </VerticalStackLayout>
+                
             </Frame>
         </VerticalStackLayout>
     </ScrollView>

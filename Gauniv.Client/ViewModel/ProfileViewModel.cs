@@ -69,6 +69,15 @@ namespace Gauniv.Client.ViewModel
                     Debug.WriteLine($"[ProfileViewModel] Login failed");
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                StatusMessage = " Admin accounts cannot access this application.\nPlease use the web interface to manage games.";
+                Password = string.Empty;
+                Debug.WriteLine($"[ProfileViewModel] Admin login blocked: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Access Denied", 
+                    "Admin accounts are restricted from using the client application.", 
+                    "OK");
+            }
             catch (Exception ex)
             {
                 StatusMessage = $"Error: {ex.Message}";
