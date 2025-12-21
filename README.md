@@ -6,30 +6,31 @@ Ce dépôt contient la solution Gauniv : un serveur web (API + interface d'admin
 
 ## Table des matières
 
-- [Etat & répartition](#etat--r%C3%A9partition)
-- [Présentation rapide](#pr%C3%A9sentation-rapide)
-- [Application cliente Windows (MAUI) - résumé des fonctionnalités](#application-cliente-windows-maui)
-  - [Navigation & architecture](#navigation--architecture)
+- [Etat & répartition](#etat-repartition)
+- [Présentation rapide](#presentation-rapide)
+- [Application cliente Windows (MAUI) - résumé des fonctionnalités](#application-cliente-maui)
+  - [Navigation & architecture](#navigation-architecture)
   - [Store (Index)](#store-index)
   - [Library (Mes jeux)](#library-mes-jeux)
   - [Profile](#profile)
   - [Game Details](#game-details)
-  - [Services & gestion locale](#services--gestion-locale)
+  - [Services & gestion locale](#services-gestion-locale)
 - [Serveur Web (API)](#serveur-web-api)
-  - [Endpoints utilisés par le client](#endpoints-utilis%C3%A9s-par-le-client)
-  - [Sécurité / restriction admin](#s%C3%A9curit%C3%A9--restriction-admin)
-- [Serveur Web - Interface d'administration et d'achat de jeux](#serveur-web--interface-dadministration-hors-api)
+  - [Endpoints utilisés par le client](#endpoints-utilises-par-le-client)
+  - [Sécurité / restriction admin](#securite-restriction-admin)
+- [Serveur Web - Interface d'administration et d'achat de jeux](#serveur-web-interface)
   - [Administration](#administration)
-  - [Utilisateur (administrateur et joueurs)](#utilisateur-vue-serveur-web)
-  - [Tout le monde (accès public)](#tout-le-monde-acc%C3%A8s-public)
-  - [Options (bonus)](#options-et-contrainte-bonus--bonnes-pratiques)
+  - [Joueur (administrateur et joueurs)](#joueur-vue-serveur-web)
+  - [Tout le monde (accès public)](#tout-le-monde)
+  - [Options (bonus)](#options-bonus)
 - [Technologies](#technologies)
 - [Comptes de test](#comptes-de-test)
-- [How to run (exécution rapide)](#how-to-run-ex%C3%A9cution-rapide)
-- [Points forts & notes](#points-forts--notes)
+- [How to run (exécution rapide)](#how-to-run)
+- [Points forts & notes](#points-forts)
 
 ---
 
+<a id="etat-repartition"></a>
 ## Etat & répartition
 
 - Statut : application web et client lourd développés.
@@ -40,6 +41,7 @@ Ce dépôt contient la solution Gauniv : un serveur web (API + interface d'admin
 
 ---
 
+<a id="presentation-rapide"></a>
 ## Présentation rapide
 
 Gauniv propose :
@@ -50,10 +52,12 @@ Gauniv propose :
 
 ---
 
+<a id="application-cliente-maui"></a>
 ## Application cliente Windows (MAUI)
 
 Résumé des fonctionnalités implémentées côté client (détaillé fourni par l'équipe) :
 
+<a id="navigation-architecture"></a>
 ### Navigation & architecture
 
 - Application MAUI en MVVM (CommunityToolkit.Mvvm).
@@ -61,6 +65,7 @@ Résumé des fonctionnalités implémentées côté client (détaillé fourni pa
 - Pages principales : Store (Store/Index), Library (Mes jeux), Profile.
 - Thème sombre inspiré de Steam (UX cohérente : fond sombre, accents colorés).
 
+<a id="store-index"></a>
 ### Store (Index)
 
 - Affichage : liste de tous les jeux fournis par l'API.
@@ -71,6 +76,7 @@ Résumé des fonctionnalités implémentées côté client (détaillé fourni pa
 - Filtres appliqués côté client en temps réel ; tri alphabétique disponible.
 - Actions : achat via API, navigation vers détails, rechargement automatique au retour.
 
+<a id="library-mes-jeux"></a>
 ### Library (Mes jeux)
 
 - Liste des jeux possédés avec statut : Downloaded, Not Downloaded, Running.
@@ -79,6 +85,7 @@ Résumé des fonctionnalités implémentées côté client (détaillé fourni pa
 - Pull-to-refresh et pagination (ex : 50 jeux).
 - Gestion des binaires : téléchargement streaming depuis l'API, stockage local via LocalGameManager, gestion du cycle de vie (télécharger/lancer/supprimer), mise à jour automatique des statuts.
 
+<a id="profile"></a>
 ### Profile
 
 - Authentification : formulaire email/password.
@@ -86,12 +93,14 @@ Résumé des fonctionnalités implémentées côté client (détaillé fourni pa
 - Gestion du token Bearer (persisté selon configuration).
 - Restriction admin : détection des tentatives de connexion admin côté client et blocage côté serveur (HTTP 403) -message explicite et directive vers l'interface web.
 
+<a id="game-details"></a>
 ### Game Details
 
 - Affiche : nom, description (support HTML), prix, catégories, statut de possession.
 - Rendu HTML : WebView stylée (thème Steam) pour les descriptions HTML, fallback en texte simple.
 - Actions : achat si non possédé, bouton retour.
 
+<a id="services-gestion-locale"></a>
 ### Services & gestion locale
 
 - `GameService` : authentification Bearer, récupération lists/pagination, achats, téléchargement des binaires, gestion des erreurs HTTP.
@@ -100,11 +109,13 @@ Résumé des fonctionnalités implémentées côté client (détaillé fourni pa
 
 ---
 
+<a id="serveur-web-api"></a>
 ## Serveur Web (API)
 
-Le serveur (ASP.NET Core) expose les endpoints utilisés par le client :
-
+<a id="endpoints-utilises-par-le-client"></a>
 ### Endpoints principaux utilisés
+
+Le serveur (ASP.NET Core) expose les endpoints utilisés par le client :
 
 - `GET /api/1.0.0/Games/List` - liste paginée avec filtres (nom, catégories, prix, possédé, taille).
 - `GET /api/1.0.0/Games/MyGames` - jeux possédés (auth requis), pagination.
@@ -114,12 +125,14 @@ Le serveur (ASP.NET Core) expose les endpoints utilisés par le client :
 - `POST /api/1.0.0/Games/Purchase/{id}` - achat d’un jeu.
 - `POST /Bearer/login` -authentification (renvoie token Bearer).
 
+<a id="securite-restriction-admin"></a>
 ### Sécurité & restriction admin
 
 - La logique d'authentification a été adaptée pour empêcher l'utilisation de comptes admin depuis le client MAUI : tentative de login admin retourne HTTP 403 et un message invitant à utiliser l'interface web d'administration.
 
 ---
 
+<a id="serveur-web-interface"></a>
 ## Serveur Web
 
 La partie serveur web fournit, en complément de l'API REST, une interface web accessible via le navigateur (pages Razor / MVC) destinée à la fois aux administrateurs et aux joueurs.
@@ -129,6 +142,7 @@ La partie serveur web fournit, en complément de l'API REST, une interface web a
 
 Ci‑dessous les fonctionnalités intégrées côté serveur web (hors API) :
 
+<a id="administration"></a>
 ### Administration
 
 Un administrateur peut :
@@ -146,6 +160,7 @@ Un administrateur peut :
 
 Toutes les actions d'administration sont restreintes par la politique d'authentification (rôle `Admin`) et enregistrent des logs d'audit (qui a fait quoi et quand).
 
+<a id="joueur-vue-serveur-web"></a>
 ### Joueur (vue serveur web)
 
 Côté interface web, un utilisateur connecté peut :
@@ -155,6 +170,7 @@ Côté interface web, un utilisateur connecté peut :
 - Voir la liste complète de ses jeux et leur état (téléchargé, disponible, en cours d'utilisation).
 - Consulter la liste des autres joueurs inscrits et leurs statuts en temps réel (présence) - affichage via SignalR pour actualisation instantanée des statuts.
 
+<a id="tout-le-monde"></a>
 ### Tout le monde (accès public)
 
 Les pages publiques permettent :
@@ -170,6 +186,7 @@ Les pages publiques permettent :
 
 Les listes publiques supportent pagination, tri et/ou filtres côté serveur afin d'optimiser la charge et permettre des requêtes efficaces.
 
+<a id="options-bonus"></a>
 ### Options
 
 - Afficher des filtres directement dans l'interface des jeux (catégorie / prix / possédé) pour une expérience admin/éditeur plus fluide.
@@ -181,6 +198,7 @@ Les listes publiques supportent pagination, tri et/ou filtres côté serveur afi
 
 ---
 
+<a id="technologies"></a>
 ## Technologies & outils
 
 - Client Windows : .NET MAUI (10.0), CommunityToolkit.Mvvm, WebView, HttpClient.
@@ -189,6 +207,7 @@ Les listes publiques supportent pagination, tri et/ou filtres côté serveur afi
 
 ---
 
+<a id="comptes-de-test"></a>
 ## Comptes de test
 
 - Utilisateur standard (joueur) :
@@ -200,6 +219,7 @@ Les listes publiques supportent pagination, tri et/ou filtres côté serveur afi
 
 ---
 
+<a id="how-to-run"></a>
 ## How to run (exécution rapide)
 
 1. Restaurer et builder la solution :
@@ -243,6 +263,7 @@ dotnet ef database update
 
 ---
 
+<a id="points-forts"></a>
 ## Points forts
 
 - Architecture MVVM propre côté client, séparation des responsabilités.
@@ -255,5 +276,3 @@ dotnet ef database update
 ## Remarques
 
 - La partie serveur de jeu (Gauniv.GameServer) et le jeu (Gauniv.Game) n'ont pas été développés dans ce dépôt.
-
----
