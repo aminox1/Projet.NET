@@ -60,7 +60,13 @@ namespace Gauniv.WebServer.Controllers
             var userId = userManager.GetUserId(User);
 
             IEnumerable<string>? cats = category;
-            var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned, minSize, maxSize, page, pageSize, orderById: true);
+            const long BYTES_IN_MO = 1024L * 1024L;
+            long? minSizeBytes = null;
+            long? maxSizeBytes = null;
+            if (minSize.HasValue) minSizeBytes = minSize.Value * BYTES_IN_MO;
+            if (maxSize.HasValue) maxSizeBytes = maxSize.Value * BYTES_IN_MO;
+
+            var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned, minSizeBytes, maxSizeBytes, page, pageSize, orderById: true);
 
             var vm = new GamesListViewModel
             {
@@ -155,7 +161,7 @@ namespace Gauniv.WebServer.Controllers
             appDbContext.Games.Add(local_game);
             await appDbContext.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"Game '{model.Name}' created successfully!";
+            TempData["SuccessMessage"] = $"Le jeu '{model.Name}' a été créé avec succès !";
             return RedirectToAction(nameof(Games));
         }
 
@@ -260,12 +266,12 @@ namespace Gauniv.WebServer.Controllers
                 }
 
                 await _imageService.UploadImageAsync(id, imageFile.OpenReadStream(), imageFile.ContentType ?? "application/octet-stream", setPrimaryImage == true);
-                TempData["EditGameSuccess"] = "Image uploaded";
+                TempData["EditGameSuccess"] = "Image téléchargée avec succès";
             }
 
             if (TempData["EditGameSuccess"] == null)
             {
-                TempData["EditGameSuccess"] = "Changes saved";
+                TempData["EditGameSuccess"] = "Modifications enregistrées";
             }
 
             // Redirect back to EditGame so the admin stays on the same page (PRG pattern)
@@ -361,7 +367,7 @@ namespace Gauniv.WebServer.Controllers
         }
 
         // GET: Admin/EditCategory/5
-        public async Task<IActionResult> EditCategory(int id)
+        public async Task<IActionResult> EditCategory(int id, string? returnUrl = null)
         {
             var local_category = await appDbContext.Categories.FindAsync(id);
             
@@ -370,54 +376,63 @@ namespace Gauniv.WebServer.Controllers
                 return NotFound();
             }
 
+            // preserve returnUrl for the view so it can render a back link (preserve filters/paging)
+            ViewData["ReturnUrl"] = string.IsNullOrEmpty(returnUrl) ? Url.Action("Categories", "Admin") : returnUrl;
+
             return View(local_category);
         }
 
         // POST: Admin/EditCategory/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCategory(int id, Category model, IFormFile? imageFile)
-        {
-            if (id != model.Id)
-            {
-                return NotFound();
-            }
+        public async Task<IActionResult> EditCategory(int id, Category model, IFormFile? imageFile, string? returnUrl)
+         {
+             if (id != model.Id)
+             {
+                 return NotFound();
+             }
 
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+             if (!ModelState.IsValid)
+             {
+                 return View(model);
+             }
 
-            appDbContext.Update(model);
-            await appDbContext.SaveChangesAsync();
+             appDbContext.Update(model);
+             await appDbContext.SaveChangesAsync();
 
-            if (imageFile != null && imageFile.Length > 0)
-            {
-                var allowed = new[] { "image/png", "image/jpeg", "image/webp" };
-                if (!allowed.Contains(imageFile.ContentType))
-                {
-                    TempData["EditCategoryError"] = "Type d'image non autorisé";
-                    return RedirectToAction(nameof(EditCategory), new { id });
-                }
+             if (imageFile != null && imageFile.Length > 0)
+             {
+                 var allowed = new[] { "image/png", "image/jpeg", "image/webp" };
+                 if (!allowed.Contains(imageFile.ContentType))
+                 {
+                     TempData["EditCategoryError"] = "Type d'image non autorisé";
+                     return RedirectToAction(nameof(EditCategory), new { id });
+                 }
 
-                if (imageFile.Length > 5 * 1024 * 1024)
-                {
-                    TempData["EditCategoryError"] = "Fichier trop volumineux (max 5MB)";
-                    return RedirectToAction(nameof(EditCategory), new { id });
-                }
+                 if (imageFile.Length > 5 * 1024 * 1024)
+                 {
+                     TempData["EditCategoryError"] = "Fichier trop volumineux (max 5MB)";
+                     return RedirectToAction(nameof(EditCategory), new { id });
+                 }
 
-                using var ms = new MemoryStream();
-                await imageFile.CopyToAsync(ms);
-                await _categoryService.SaveImageAsync(id, ms.ToArray(), imageFile.ContentType ?? "application/octet-stream");
-                TempData["EditCategorySuccess"] = "Image uploaded";
-            }
-            else
-            {
-                TempData["EditCategorySuccess"] = "Category saved";
-            }
+                 using var ms = new MemoryStream();
+                 await imageFile.CopyToAsync(ms);
+                 await _categoryService.SaveImageAsync(id, ms.ToArray(), imageFile.ContentType ?? "application/octet-stream");
+                 TempData["EditCategorySuccess"] = "Image téléchargée avec succès";
+             }
+             else
+             {
+                 TempData["EditCategorySuccess"] = "Catégorie enregistrée";
+             }
 
-            return RedirectToAction(nameof(EditCategory), new { id });
-        }
+             // redirect back to provided returnUrl if local (preserve filters/paging), else stay on EditCategory
+             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+             {
+                 return Redirect(returnUrl);
+             }
+
+             return RedirectToAction(nameof(EditCategory), new { id });
+         }
 
         // POST: Admin/DeleteCategory/5
         [HttpPost]

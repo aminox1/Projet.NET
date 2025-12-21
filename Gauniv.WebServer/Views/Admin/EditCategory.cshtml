@@ -4,8 +4,29 @@
     ViewData["Title"] = "Modifier la catégorie";
 }
 
+<style>
+    .back-action { display:flex; gap:12px; align-items:center; }
+    @@media (max-width:576px) { .back-action { flex-direction:column; align-items:flex-start; } }
+</style>
+
 <div class="container mt-4">
-    <h1 class="mb-4">Modifier la catégorie : @Model.Name</h1>
+    <!-- header with prominent back button -->
+    @{
+        var returnUrl = ViewData["ReturnUrl"] as string ?? Url.Action("Categories", "Admin");
+    }
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-0">Modifier la catégorie</h1>
+        </div>
+        <div class="back-action">
+            <a class="btn btn-lg btn-primary d-inline-flex align-items-center" href="@returnUrl" role="button" aria-label="Retour à la liste des catégories">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 7.5H14.5A.5.5 0 0 1 15 8z"/>
+                </svg>
+                Retourner à la liste
+            </a>
+        </div>
+    </div>
 
     @if (TempData["EditCategorySuccess"] != null)
     {
@@ -18,6 +39,7 @@
 
     <form asp-action="EditCategory" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
         
         <div class="mb-3">
             <label asp-for="Name" class="form-label">Nom de la catégorie</label>
@@ -57,7 +79,7 @@
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-save"></i> Enregistrer
             </button>
-            <a asp-action="Categories" class="btn btn-secondary">
+            <a class="btn btn-secondary" href="@returnUrl">
                 <i class="bi bi-x-circle"></i> Annuler
             </a>
         </div>

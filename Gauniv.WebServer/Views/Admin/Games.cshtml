@@ -39,7 +39,7 @@
                         <td>@game.Id</td>
                         <td>@game.Name</td>
                         <td>€@game.Price.ToString("F2")</td>
-                        <td>@(game.Size > 0 ? $"{game.Size / 1024 / 1024} Mo" : "N/D")</td>
+                        <td>@(game.Size > 0 ? $"{Math.Round(game.Size / (1024.0 * 1024.0), 1).ToString(System.Globalization.CultureInfo.CurrentCulture)} Mo" : "N/D")</td>
                         <td>
                             @string.Join(", ", game.Categories)
                         </td>

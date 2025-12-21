@@ -31,7 +31,13 @@ namespace Gauniv.WebServer.Controllers
             if (userId == null) return Challenge();
             
             IEnumerable<string>? cats = category;
-            var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned: true, minSize: minSize, maxSize: maxSize, page: page, pageSize: pageSize);
+            const long BYTES_IN_MO = 1024L * 1024L;
+            long? minSizeBytes = null;
+            long? maxSizeBytes = null;
+            if (minSize.HasValue) minSizeBytes = minSize.Value * BYTES_IN_MO;
+            if (maxSize.HasValue) maxSizeBytes = maxSize.Value * BYTES_IN_MO;
+
+            var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned: true, minSize: minSizeBytes, maxSize: maxSizeBytes, page: page, pageSize: pageSize);
 
             var vm = new Gauniv.WebServer.ViewModels.GamesListViewModel
             {

@@ -152,7 +152,7 @@ namespace Gauniv.WebServer.Areas.Identity.Pages.Account
 
                         if (await _userManager.IsInRoleAsync(user, "User"))
                         {
-                            return RedirectToAction("Index", "GamesWeb");
+                            return RedirectToAction("Index", "Home");
                         }
 
                         return LocalRedirect(returnUrl);

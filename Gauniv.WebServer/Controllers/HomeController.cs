@@ -56,7 +56,14 @@ namespace Gauniv.WebServer.Controllers
                  isOwned = null;
              }
              IEnumerable<string>? cats = category;
-             var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned, minSize, maxSize, page, pageSize);
+             long? minSizeBytes = null;
+             long? maxSizeBytes = null;
+             const long BYTES_IN_MO = 1024L * 1024L;
+             if (minSize.HasValue) minSizeBytes = minSize.Value * BYTES_IN_MO;
+             if (maxSize.HasValue) maxSizeBytes = maxSize.Value * BYTES_IN_MO;
+
+             var (items, total) = await _gameService.GetFilteredAsync(userId, name, minPrice, maxPrice, cats, isOwned, minSizeBytes, maxSizeBytes, page, pageSize);
+
              var vm = new Gauniv.WebServer.ViewModels.GamesListViewModel
              {
                  Items = items,

@@ -12,6 +12,9 @@
     .game-image-card .card-body { display:flex; flex-direction:column; justify-content:space-between; min-height:140px; }
     .game-image-card .d-grid .btn { width:100%; white-space:normal; }
     .col-6.col-sm-4.col-md-3.col-lg-2.d-flex { align-items:stretch; }
+
+    .back-action { display:flex; gap:12px; }
+    @@media (max-width: 576px) { .back-action { flex-direction:column; } }
 </style>
 
 <div class="container mt-4">
@@ -25,8 +28,29 @@
     <div class="alert alert-danger">@TempData["EditGameError"]</div>
 }
 
+@{
+    var returnUrl = ViewData["ReturnUrl"] as string ?? Url.Action("Games", "Admin");
+}
+
+<!-- Header: title left, big back button right -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Modifier le jeu</h1>
+    </div>
+
+    <div class="back-action">
+        <a class="btn btn-lg btn-primary d-inline-flex align-items-center" href="@returnUrl" role="button" aria-label="Retour à la liste des jeux">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16" aria-hidden="true">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 7.5H14.5A.5.5 0 0 1 15 8z"/>
+            </svg>
+            Retourner à la liste
+        </a>
+    </div>
+</div>
+
 <form asp-action="EditGame" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
     
     <div class="mb-3">
         <label class="form-label">Nom du jeu</label>
@@ -67,7 +91,7 @@
         <label class="form-label">Binaire actuel</label>
         @if (!string.IsNullOrEmpty(Model.PayloadPath))
         {
-            <p class="text-success"><i class="bi bi-file-check"></i> Fichier uploadé (@(Model.Size / 1024 / 1024) Mo)</p>
+            <p class="text-success"><i class="bi bi-file-check"></i> Fichier uploadé (@(Math.Round((Model.Size ?? 0L) / (1024.0 * 1024.0), 1).ToString(System.Globalization.CultureInfo.CurrentCulture)) Mo)</p>
         }
         else
         {
@@ -129,9 +153,9 @@
          <button type="submit" class="btn btn-primary">
              <i class="bi bi-save"></i> Enregistrer
          </button>
-         <button type="button" class="btn btn-secondary" onclick="window.location.reload();">
-             <i class="bi bi-x-circle"></i> Annuler
-         </button>
+        <a class="btn btn-secondary" href="@Url.Action("Games", "Admin")">
+            <i class="bi bi-x-circle"></i> Annuler
+        </a>
      </div>
  </form>
 </div> <!-- fin container -->

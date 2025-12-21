@@ -20,19 +20,18 @@
     @foreach (var g in Model.Items)
     {
         var priceText = string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C}", g.Price);
-        string sizeText = "N/A";
+        string sizeText = "N/D";
         try
         {
             var s = Convert.ToInt64(g.Size);
             if (s > 0)
             {
-                if (s >= 1024L * 1024L)
-                    sizeText = (s / 1024 / 1024) + " MB";
-                else
-                    sizeText = (s / 1024) + " KB";
+                // Always show size in megabytes (Mo) with one decimal for readability
+                double mb = s / (1024.0 * 1024.0);
+                sizeText = Math.Round(mb, 1).ToString(System.Globalization.CultureInfo.CurrentCulture) + " Mo";
             }
         }
-        catch { var sText = Convert.ToString(g.Size); sizeText = string.IsNullOrEmpty(sText) ? "N/A" : sText; }
+        catch { var sText = Convert.ToString(g.Size); sizeText = string.IsNullOrEmpty(sText) ? "N/D" : sText; }
 
         <div class="col">
             <div class="steam-card card h-100">

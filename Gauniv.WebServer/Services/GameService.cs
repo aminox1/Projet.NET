@@ -69,20 +69,20 @@ namespace Gauniv.WebServer.Services
                 .Include(u => u.OwnedGames)
                 .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
-                return (false, "User not found");
+                return (false, "Utilisateur introuvable");
 
             var game = await _db.Games
                 .Include(g => g.Owners)
                 .FirstOrDefaultAsync(g => g.Id == gameId);
             if (game == null)
-                return (false, "Game not found");
+                return (false, "Jeu introuvable");
 
             if (game.Owners.Any(o => o.Id == userId))
-                return (false, "You already own this game");
+                return (false, "Vous possédez déjà ce jeu");
 
             user.OwnedGames.Add(game);
             await _db.SaveChangesAsync();
-            return (true, "Game purchased successfully");
+            return (true, "Achat du jeu effectué avec succès");
         }
 
         public async Task<(List<GameViewModel> Items, int TotalCount)> GetFilteredAsync(

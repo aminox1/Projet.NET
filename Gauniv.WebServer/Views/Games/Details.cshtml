@@ -6,10 +6,8 @@
     string FormatSize(long? size)
     {
         if (!size.HasValue || size.Value <= 0) return "N/D";
-        double kb = size.Value / 1024.0;
-        if (kb < 1024) return $"{Math.Round(kb)} Ko";
-        double mb = kb / 1024.0;
-        return $"{Math.Round(mb, 1)} Mo";
+        double mb = size.Value / (1024.0 * 1024.0);
+        return Math.Round(mb, 1).ToString(System.Globalization.CultureInfo.CurrentCulture) + " Mo";
     }
 }
 

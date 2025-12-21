@@ -120,9 +120,21 @@ namespace Gauniv.WebServer.Areas.Identity.Pages.Account
                     var user = await _userManager.FindByEmailAsync(Input.Email);
                     if (user != null && (await _userManager.IsInRoleAsync(user, "Admin") || await _userManager.IsInRoleAsync(user, "User")))
                     {
-                        return RedirectToAction("Index", "Home");
+                        if (await _userManager.IsInRoleAsync(user, "Admin"))
+                        {
+                            return RedirectToAction("Index", "Admin");
+                        }
+
+                        if (await _userManager.IsInRoleAsync(user, "User"))
+                        {
+                            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                            {
+                                return LocalRedirect(returnUrl);
+                            }
+
+                            return RedirectToAction("Index", "Home");
+                        }
                     }
-                    
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
